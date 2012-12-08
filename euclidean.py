@@ -18,6 +18,32 @@ def solve_poly2(a, b, c):
         else:
             return [-b/(2*a)]
 
+class CartRef:
+
+    def __init__(self, orig_scr, e1_scr, e2_scr, dim, diffs=False):
+        self.orig_scr = orig_scr
+        self.dim = dim
+        if not diffs:
+            self.e1_scr = e1_scr
+            self.e2_scr = e2_scr
+            self.e1_diff = (e1_scr[0] - orig_scr[0], e1_scr[1] - orig_scr[1])
+            self.e2_diff = (e2_scr[0] - orig_scr[0], e2_scr[1] - orig_scr[1])
+        else:
+            self.e1_diff = e1_scr
+            self.e2_diff = e2_scr
+
+    def to_scr(self, x, y):
+        return (int(self.orig_scr[0] + x * self.e1_diff[0] + y * self.e2_diff[0]),
+                int(self.orig_scr[1] + x * self.e1_diff[1] + y * self.e2_diff[1]))
+
+    def from_scr(self, x, y):
+        tmp_x = float(x) - self.orig_scr[0]
+        tmp_y = float(y) - self.orig_scr[1]
+        denom = det2(self.e1_diff[0], self.e2_diff[0], self.e1_diff[1], self.e2_diff[1])
+        newx = det2(tmp_x, self.e2_diff[0], tmp_y, self.e2_diff[1]) / denom
+        newy = det2(self.e1_diff[0], tmp_x, self.e1_diff[1], tmp_y) / denom
+        return (newx, newy)
+
 class EuPoint:
 
     def __init__(self, x, y):
