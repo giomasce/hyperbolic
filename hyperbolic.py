@@ -93,6 +93,12 @@ class Line:
         x2, y2 = self.p2.get_coords()
         return EuPoint(x1, y1).line_to(EuPoint(x2, y2))
 
-    # TODO - Incomplete: check that the point is in the disc
     def intersection(self, line):
-        return Point.from_eupoint(self.to_euline().intersection_line(line.to_euline()))
+        try:
+            p = Point.from_eupoint(self.to_euline().intersection_line(line.to_euline()))
+            if p.x**2 + p.y**2 > 1:
+                return None
+            else:
+                return p
+        except ZeroDivisionError:
+            return None

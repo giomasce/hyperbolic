@@ -74,13 +74,13 @@ def main():
         p = hyperbolic.Point(0.5, 0.4)
         cairo_ctx.set_source_rgb(0, 0, 0)
         p.draw_klein(cairo_ctx)
-        q = hyperbolic.InfPoint(0.6 * math.pi)
+        q = hyperbolic.InfPoint(0.5 * math.pi)
         q.draw_klein(cairo_ctx)
 
         l = p.line_to(q)
         l.draw_klein(cairo_ctx)
 
-        r = hyperbolic.Line(hyperbolic.InfPoint(3.0), hyperbolic.InfPoint(2.0))
+        r = hyperbolic.Line(hyperbolic.InfPoint(1.0), hyperbolic.InfPoint(2.0))
         r.draw_klein(cairo_ctx)
 
         a = r.intersection(l)
