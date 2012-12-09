@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import math
+import mpmath as math
 
 import cairo
 
@@ -14,6 +14,9 @@ import euclidean
 import hyperbolic
 
 def main():
+
+    math.mp.prec = 500
+
     # Initialize PyGame
     pygame.init()
     fpsClock = pygame.time.Clock()
@@ -74,7 +77,7 @@ def main():
         p = hyperbolic.Point(0.5, 0.4)
         cairo_ctx.set_source_rgb(0, 0, 0)
         p.draw_klein(cairo_ctx)
-        q = hyperbolic.InfPoint(0.5 * math.pi * float(pygame.time.get_ticks()) / 1000)
+        q = hyperbolic.InfPoint(0.0 * math.pi * float(pygame.time.get_ticks()) / 1000)
         q.draw_klein(cairo_ctx)
 
         l = p.line_to(q)
@@ -86,6 +89,12 @@ def main():
         a = r.intersection(l)
         if a is not None:
             a.draw_klein(cairo_ctx)
+
+        l = hyperbolic.Point(0.0, -0.4).line_to(hyperbolic.Point(-0.7, 0.1))
+        p = l.point_at_coordinate(-5.0 + float(pygame.time.get_ticks()) / 1000)
+        print l.get_point_coordinate(p)
+        l.draw_klein(cairo_ctx)
+        p.draw_klein(cairo_ctx)
 
         cairo_ctx.restore()
 

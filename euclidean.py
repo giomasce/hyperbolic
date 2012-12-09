@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import math
+import mpmath as math
 
 def det2(a, b, c, d):
     return a*d - b*c
@@ -17,6 +17,9 @@ def solve_poly2(a, b, c):
                     (-b+sqrtdelta)/(2*a)]
         else:
             return [-b/(2*a)]
+
+def crossratio(a, b, c, d):
+    return math.sqrt((a.sqdistance(c) * b.sqdistance(d)) / (a.sqdistance(d) * b.sqdistance(c)))
 
 class EuPoint:
 
