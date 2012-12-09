@@ -15,7 +15,7 @@ import hyperbolic
 
 def main():
 
-    math.mp.prec = 500
+    #math.mp.prec = 500
 
     # Initialize PyGame
     pygame.init()
@@ -23,8 +23,9 @@ def main():
     pygame.display.set_caption('Hyperbolic!')
 
     # Initialize a shared buffer between PyGame and cairo
-    size = (1024, 768)
-    pygame_surf = pygame.display.set_mode(size, 0, 32)
+    size = (0, 0)
+    pygame_surf = pygame.display.set_mode(size, pygame.FULLSCREEN, 32)
+    size = pygame_surf.get_size()
     cairo_surf = cairo.ImageSurface.create_for_data(
         pygame.surfarray.pixels2d(pygame_surf),
         cairo.FORMAT_RGB24,
@@ -35,7 +36,7 @@ def main():
     cairo_ctx = cairo.Context(cairo_surf)
 
     # Set up a reasonable coordinate system
-    versor_len = 350.0
+    versor_len = 0.45 * min(size)
     reflect = cairo.Matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)
     cairo_ctx.transform(reflect)
     cairo_ctx.translate(size[0]/2, -size[1]/2)
@@ -92,7 +93,7 @@ def main():
 
         l = hyperbolic.Point(0.0, -0.4).line_to(hyperbolic.Point(-0.7, 0.1))
         p = l.point_at_coordinate(-5.0 + float(pygame.time.get_ticks()) / 1000)
-        print l.get_point_coordinate(p)
+        #print l.get_point_coordinate(p)
         l.draw_klein(cairo_ctx)
         p.draw_klein(cairo_ctx)
 
@@ -104,9 +105,13 @@ def main():
                 pygame.quit()
                 sys.exit()
 
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.event.post(pygame.event.Event(QUIT))
+
         # Finish
         pygame.display.flip()
-        fpsClock.tick(30)
+        fpsClock.tick(24)
 
 if __name__ == '__main__':
     main()
