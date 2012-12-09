@@ -74,7 +74,7 @@ def main():
         p = hyperbolic.Point(0.5, 0.4)
         cairo_ctx.set_source_rgb(0, 0, 0)
         p.draw_klein(cairo_ctx)
-        q = hyperbolic.InfPoint(0.5 * math.pi)
+        q = hyperbolic.InfPoint(0.5 * math.pi * float(pygame.time.get_ticks()) / 1000)
         q.draw_klein(cairo_ctx)
 
         l = p.line_to(q)
@@ -84,7 +84,8 @@ def main():
         r.draw_klein(cairo_ctx)
 
         a = r.intersection(l)
-        a.draw_klein(cairo_ctx)
+        if a is not None:
+            a.draw_klein(cairo_ctx)
 
         cairo_ctx.restore()
 
