@@ -22,6 +22,10 @@ class Point:
     def to_point(self):
         return self
 
+    @classmethod
+    def from_eupoint(self, point):
+        return Point(point.x, point.y)
+
     def draw_klein(self, ctx):
         ctx.arc(self.x, self.y, POINT_RADIUS, 0, 2*math.pi)
         ctx.fill()
@@ -45,6 +49,10 @@ class InfPoint:
     @classmethod
     def from_xy(self, x, y):
         return InfPoint(math.atan2(y, x))
+
+    @classmethod
+    def from_eupoint(self, point):
+        return InfPoint.from_xy(point.x, point.y)
 
     def normalize(self):
         self.alpha = self.alpha - 2*math.pi * my_trunc(self.alpha / (2*math.pi))
@@ -79,3 +87,12 @@ class Line:
         ctx.move_to(x1, y1)
         ctx.line_to(x2, y2)
         ctx.stroke()
+
+    def to_euline(self):
+        x1, y1 = self.p1.get_coords()
+        x2, y2 = self.p2.get_coords()
+        return EuPoint(x1, y1).line_to(EuPoint(x2, y2))
+
+    # TODO - Incomplete: check that the point is in the disc
+    def intersection(self, line):
+        return Point.from_eupoint(self.to_euline().intersection_line(line.to_euline()))
