@@ -145,3 +145,72 @@ class Line:
 
     def get_point_coordinate(self, point):
         return self.ref_point().distance(point, line=self)
+
+class PointedVector:
+
+    def __init__(self, x, y, alpha):
+        self.x = x
+        self.y = y
+        self.alpha = alpha
+
+        self.metric = None
+        self.base = None
+
+    def get_metric(self):
+        if self.metric is None:
+            denom = 1.0 - self.x**2 - self.y**2
+            g11 = (1.0 - self.y**2) / denom
+            g12 = (self.x * self.y) / denom
+            g22 = (1.0 - self.x**2) / denom
+            self.metric = (g11, g12, g22)
+
+        return self.metric
+
+    def scal(self, v1, v2):
+        g11, g12, g22 = self.get_metric()
+        return v1[0]*v2[0]*g11 + (v1[0]*v2[1] + v1[1]*v2[0])*g12 + v1[1]*v2[1]*g22
+
+    def normalize(self, v):
+        factor = 1.0 / (math.sqrt(self.scal(v, v)))
+        return (v[0]*factor, v[1]*factor)
+
+    def get_base(self):
+        """The y component of the first vector is zero."""
+        if self.base is None:
+            g11, g12, g22 = self.get_metric()
+            v1 = self.normalize((1.0, 0.0))
+            v2 = self.normalize((-g12, g11))
+            # Choose v2 so that (v1, v2) is oriented
+            if v2[1] < 0:
+                v2 = (-v2[0], -v2[1])
+            self.base = (v1, v2)
+
+        return self.base
+
+    def turn(self, beta):
+        v1, v2 = self.get_base()
+        euclidean = (math.cos(self.alpha), math.sin(self.alpha))
+        # Compute the coordinates of the euclidean direction in the
+        # orthonormal base (v1, v2)
+        c2 = euclidean[1] / v2[1]
+        c1 = (euclidean[0] - v2[0] * c2) / v1[0]
+        new_angle = beta + math.atan2(c2, c1)
+        new_c1 = math.cos(new_angle)
+        new_c2 = math.sin(new_angle)
+        # Convert back the coordinates to the euclidean global
+        # reference
+        new_euclidean = (v1[0]*new_c1[0] + v2[0]*new_c2[0],
+                         v1[1]*new_c1[1] + v2[1]*new_c2[1])
+        new_alpha = math.atan2(new_euclidean[1], new_euclidean[0])
+
+        return PointedVector(self.x, self.y, new_alpha)
+
+    def to_point(self):
+        return Point(self.x, self.y)
+
+    def to_line(self):
+        here = self.to_point()
+        dist = 0.5 * (1.0 - here.to_eupoint().norm())
+        there = Point(here.x + dist * math.cos(self.alpha),
+                      here.y + dist * math.sin(self.alpha))
+        return here.line_to(there)

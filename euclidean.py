@@ -33,6 +33,9 @@ class EuPoint:
     def distance(self, point):
         return math.sqrt(self.sqdistance(point))
 
+    def norm(self):
+        return math.sqrt(self.x**2 + self.y**2)
+
     def line_to(self, point):
         deltay = point.y - self.y
         deltax = point.x - self.x
