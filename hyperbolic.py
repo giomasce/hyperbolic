@@ -199,11 +199,18 @@ class PointedVector:
         new_c2 = math.sin(new_angle)
         # Convert back the coordinates to the euclidean global
         # reference
-        new_euclidean = (v1[0]*new_c1[0] + v2[0]*new_c2[0],
-                         v1[1]*new_c1[1] + v2[1]*new_c2[1])
+        new_euclidean = (v1[0]*new_c1 + v2[0]*new_c2,
+                         v1[1]*new_c1 + v2[1]*new_c2)
         new_alpha = math.atan2(new_euclidean[1], new_euclidean[0])
 
         return PointedVector(self.x, self.y, new_alpha)
+
+    def advance(self, dist):
+        point = self.to_point()
+        line = self.to_line()
+        coord = line.get_point_coordinate(point)
+        new_point = line.point_at_coordinate(coord + dist)
+        return PointedVector(new_point.x, new_point.y, self.alpha)
 
     def to_point(self):
         return Point(self.x, self.y)
