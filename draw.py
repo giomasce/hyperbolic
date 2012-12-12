@@ -99,6 +99,7 @@ def main():
 
         # cairo_ctx.restore()
 
+        cairo_ctx.set_source_rgb(0, 0, 0)
         turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
         turtle.to_point().draw_klein(cairo_ctx)
         turtle.to_line().draw_klein(cairo_ctx)
