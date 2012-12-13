@@ -12,6 +12,7 @@ def my_trunc(x):
         return math.trunc(x) - 1.0
 
 POINT_RADIUS = 0.015
+CIRCLE_LINE_THRESHOLD = 0.000001
 
 class Point:
 
@@ -19,11 +20,17 @@ class Point:
         self.x = x
         self.y = y
 
+        self.poincare_coords = None
+
     def to_point(self):
         return self
 
     def to_eupoint(self):
         return EuPoint(self.x, self.y)
+
+    def to_eupoint_poincare(self):
+        x, y = self.get_poincare_coords()
+        return EuPoint(x, y)
 
     @classmethod
     def from_eupoint(self, point):
@@ -32,12 +39,24 @@ class Point:
     def get_coords(self):
         return (self.x, self.y)
 
+    def get_poincare_coords(self):
+        if self.poincare_coords is None:
+            mult = 1.0 / (1.0 + math.sqrt(1.0 - self.to_eupoint().sqnorm()))
+            self.poincare_coords = (mult * self.x, mult * self.y)
+
+        return self.poincare_coords
+
     def draw_klein(self, ctx):
         ctx.arc(self.x, self.y, POINT_RADIUS, 0, 2*math.pi)
         ctx.fill()
         #ctx.move_to(self.x, self.y)
         #ctx.line_to(self.x, self.y)
         #ctx.stroke()
+
+    def draw_poincare(self, ctx):
+        x, y = self.get_poincare_coords()
+        ctx.arc(x, y, POINT_RADIUS, 0, 2*math.pi)
+        ctx.fill()
 
     def line_to(self, point):
         point = point.to_point()
@@ -83,6 +102,9 @@ class InfPoint:
             self.coords = (math.cos(self.alpha), math.sin(self.alpha))
         return self.coords
 
+    def get_poincare_coords(self):
+        return self.get_coords()
+
     def to_point(self):
         x, y = self.get_coords()
         return Point(x, y)
@@ -94,6 +116,9 @@ class InfPoint:
         x, y = self.get_coords()
         ctx.arc(x, y, POINT_RADIUS, 0, 2*math.pi)
         ctx.fill()
+
+    def draw_poincare(self, ctx):
+        self.draw_klein(ctx)
 
     def line_to(self, point):
         return self.to_point().line_to(point)
@@ -111,6 +136,32 @@ class Line:
         ctx.move_to(x1, y1)
         ctx.line_to(x2, y2)
         ctx.stroke()
+
+    def draw_poincare(self, ctx):
+        ref = self.ref_point()
+        ref_klein = ref.to_eupoint()
+        ref_poincare = ref.to_eupoint_poincare()
+        sagitta = ref.to_eupoint().distance(ref_poincare)
+
+        # If line is too near center, just treat is a line
+        if sagitta < CIRCLE_LINE_THRESHOLD:
+            ctx.move_to(*self.p1.get_coords())
+            ctx.line_to(*self.p2.get_coords())
+            ctx.stroke()
+
+        # Else compute radius and center point and draw it
+        else:
+            semichord = self.p1.to_eupoint().distance(ref.to_eupoint())
+            radius = (sagitta**2 + semichord**2) / (2 * sagitta)
+            sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
+            center = ref_poincare.add(sagitta_versor.multiply(radius))
+            ctx.save()
+            ctx.new_path()
+            ctx.arc(0, 0, 1, 0, 2 * math.pi)
+            ctx.clip()
+            ctx.arc(center.x, center.y, radius, 0.0, 2 * math.pi)
+            ctx.stroke()
+            ctx.restore()
 
     def to_euline(self):
         x1, y1 = self.p1.get_coords()

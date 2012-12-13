@@ -27,14 +27,29 @@ class EuPoint:
         self.x = x
         self.y = y
 
+    def add(self, point):
+        return EuPoint(self.x + point.x, self.y + point.y)
+
+    def subtract(self, point):
+        return EuPoint(self.x - point.x, self.y - point.y)
+
+    def multiply(self, coeff):
+        return EuPoint(coeff * self.x, coeff * self.y)
+
+    def normalize(self):
+        return self.multiply(1.0 / self.norm())
+
     def sqdistance(self, point):
         return (self.x - point.x)**2 + (self.y - point.y)**2
 
     def distance(self, point):
         return math.sqrt(self.sqdistance(point))
 
+    def sqnorm(self):
+        return self.x**2 + self.y**2
+
     def norm(self):
-        return math.sqrt(self.x**2 + self.y**2)
+        return math.sqrt(self.sqnorm())
 
     def line_to(self, point):
         deltay = point.y - self.y
