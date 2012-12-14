@@ -4,6 +4,11 @@
 import sys
 import mpmath as math
 
+import pygst
+pygst.require("0.10")
+import gst
+import pygtk
+import gtk
 import cairo
 
 import pygame
@@ -13,8 +18,14 @@ from pygame.locals import *
 import euclidean
 import hyperbolic
 import teichmuller
+from utils import get_actual_dimension
 
 def draw_frame(cairo_ctx, size, param):
+
+    # Settings
+    cairo_ctx.set_line_width(get_actual_dimension(cairo_ctx, 1.5))
+    cairo_ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+    cairo_ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
     # Everything white
     cairo_ctx.save()
@@ -23,48 +34,6 @@ def draw_frame(cairo_ctx, size, param):
     cairo_ctx.set_source_rgb(255, 255, 255)
     cairo_ctx.fill()
     cairo_ctx.restore()
-
-    # cairo_ctx.save()
-    # cairo_ctx.rotate(0.0 * float(pygame.time.get_ticks()) / 1000)
-
-    # cairo_ctx.set_source_rgb(255, 0, 0)
-    # cairo_ctx.move_to(0, 0)
-    # cairo_ctx.line_to(1, 0)
-    # cairo_ctx.stroke()
-
-    # cairo_ctx.set_source_rgb(0, 255, 0)
-    # cairo_ctx.move_to(0, 0)
-    # cairo_ctx.line_to(0, 1)
-    # cairo_ctx.stroke()
-
-    # p = hyperbolic.Point(0.5, 0.4)
-    # cairo_ctx.set_source_rgb(0, 0, 0)
-    # p.draw_klein(cairo_ctx)
-    # q = hyperbolic.InfPoint(0.0 * math.pi * float(pygame.time.get_ticks()) / 1000)
-    # q.draw_klein(cairo_ctx)
-
-    # l = p.line_to(q)
-    # l.draw_klein(cairo_ctx)
-
-    # r = hyperbolic.Line(hyperbolic.InfPoint(1.0), hyperbolic.InfPoint(2.0))
-    # r.draw_klein(cairo_ctx)
-
-    # a = r.intersection(l)
-    # if a is not None:
-    #     a.draw_klein(cairo_ctx)
-
-    # l = hyperbolic.Point(0.0, -0.4).line_to(hyperbolic.Point(-0.7, 0.1))
-    # p = l.point_at_coordinate(-5.0 + float(pygame.time.get_ticks()) / 1000)
-    # #print l.get_point_coordinate(p)
-    # l.draw_klein(cairo_ctx)
-    # p.draw_klein(cairo_ctx)
-
-    # cairo_ctx.restore()
-
-    # cairo_ctx.set_source_rgb(0, 0, 0)
-    # turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
-    # turtle.to_point().draw_poincare(cairo_ctx)
-    # turtle.to_line().draw_poincare(cairo_ctx)
 
     # for i in xrange(10):
     #     cairo_ctx.set_source_rgb(float(i) / 10, float(i) / 10, float(i) / 10)
@@ -77,18 +46,47 @@ def draw_frame(cairo_ctx, size, param):
 
     cairo_ctx.set_source_rgb(0, 0, 0)
     turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
-    teichmuller.draw_hexagon(cairo_ctx, turtle, 1.0, 1.0, 1.0)
+    teichmuller.draw_hexagon(cairo_ctx, turtle, 1.0, 0.5, 2.0, color=True)
 
     # Draw hyperbolic circle
-    cairo_ctx.save()
     cairo_ctx.arc(0, 0, 1, 0, 2 * math.pi)
-    cairo_ctx.save()
-    cairo_ctx.identity_matrix()
-    cairo_ctx.set_line_width(1.5)
-    cairo_ctx.restore()
     cairo_ctx.set_source_rgb(0, 0, 0)
     cairo_ctx.stroke()
-    cairo_ctx.restore()
+
+def draw_overlay(overlay, ctx, timestamp, duration):
+
+    ctx.set_source_rgb(255, 0, 0)
+    ctx.move_to(0, 0)
+    ctx.line_to(100, 100)
+    ctx.stroke()
+
+def gtk_animation():
+    pipeline = gst.Pipeline("pipeline")
+
+    videosrc = gst.element_factory_make("videotestsrc", "videosrc")
+    pipeline.add(videosrc)
+
+    convert1 = gst.element_factory_make("ffmpegcolorspace", "convert1")
+    pipeline.add(convert1)
+    videosrc.link(convert1)
+
+    overlay = gst.element_factory_make("cairooverlay", "overlay")
+    pipeline.add(overlay)
+    convert1.link(overlay)
+
+    convert2 = gst.element_factory_make("ffmpegcolorspace", "convert2")
+    pipeline.add(convert2)
+    overlay.link(convert2)
+
+    videosink = gst.element_factory_make("autovideosink", "videosink")
+    pipeline.add(videosink)
+    convert2.link(videosink)
+
+    overlay.connect("draw", draw_overlay)
+
+    pipeline.set_state(gst.STATE_PLAYING)
+
+    gtk.main()
 
 def pygame_animation():
 
@@ -118,10 +116,6 @@ def pygame_animation():
     cairo_ctx.transform(reflect)
     cairo_ctx.translate(size[0]/2, -size[1]/2)
     cairo_ctx.scale(versor_len, versor_len)
-
-    cairo_ctx.set_line_width(1.5 / versor_len)
-    cairo_ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-    cairo_ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
     while True:
         param = 0.001 * pygame.time.get_ticks()
@@ -183,3 +177,4 @@ def save_frames():
 if __name__ == '__main__':
     pygame_animation()
     #save_frames()
+    #gtk_animation()

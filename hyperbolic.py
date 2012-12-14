@@ -4,6 +4,7 @@
 import mpmath as math
 
 from euclidean import EuPoint, EuLine, EuCircle, crossratio
+from utils import get_actual_dimension
 
 def my_trunc(x):
     if x >= 0:
@@ -11,8 +12,14 @@ def my_trunc(x):
     else:
         return math.trunc(x) - 1.0
 
-POINT_RADIUS = 0.015
+POINT_RADIUS = 3.5
 CIRCLE_LINE_THRESHOLD = 0.000001
+
+class HyperbolicContext:
+
+    def __init__(self, cairo, trasf):
+        self.cairo = cairo
+        self.trasf = trasf
 
 class Point:
 
@@ -47,7 +54,7 @@ class Point:
         return self.poincare_coords
 
     def draw_klein(self, ctx):
-        ctx.arc(self.x, self.y, POINT_RADIUS, 0, 2*math.pi)
+        ctx.arc(self.x, self.y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
         ctx.fill()
         #ctx.move_to(self.x, self.y)
         #ctx.line_to(self.x, self.y)
@@ -55,7 +62,7 @@ class Point:
 
     def draw_poincare(self, ctx):
         x, y = self.get_poincare_coords()
-        ctx.arc(x, y, POINT_RADIUS, 0, 2*math.pi)
+        ctx.arc(x, y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
         ctx.fill()
 
     def line_to(self, point):
@@ -114,7 +121,7 @@ class InfPoint:
 
     def draw_klein(self, ctx):
         x, y = self.get_coords()
-        ctx.arc(x, y, POINT_RADIUS, 0, 2*math.pi)
+        ctx.arc(x, y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
         ctx.fill()
 
     def draw_poincare(self, ctx):
