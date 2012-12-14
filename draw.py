@@ -12,6 +12,7 @@ from pygame.locals import *
 
 import euclidean
 import hyperbolic
+import teichmuller
 
 def draw_frame(cairo_ctx, size, param):
 
@@ -60,21 +61,23 @@ def draw_frame(cairo_ctx, size, param):
 
     # cairo_ctx.restore()
 
+    # cairo_ctx.set_source_rgb(0, 0, 0)
+    # turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
+    # turtle.to_point().draw_poincare(cairo_ctx)
+    # turtle.to_line().draw_poincare(cairo_ctx)
+
+    # for i in xrange(10):
+    #     cairo_ctx.set_source_rgb(float(i) / 10, float(i) / 10, float(i) / 10)
+
+    #     turtle = turtle.advance(1.0)
+    #     turtle.to_point().draw_poincare(cairo_ctx)
+    #     turtle.to_line().draw_poincare(cairo_ctx)
+
+    #     turtle = turtle.turn(0.1 * param * 0.5 * math.pi)
+
     cairo_ctx.set_source_rgb(0, 0, 0)
     turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
-    turtle.to_point().draw_poincare(cairo_ctx)
-    turtle.to_line().draw_poincare(cairo_ctx)
-
-    for i in xrange(10):
-        cairo_ctx.set_source_rgb(float(i) / 10, float(i) / 10, float(i) / 10)
-
-        turtle = turtle.advance(1.0)
-        turtle.to_point().draw_poincare(cairo_ctx)
-        turtle.to_line().draw_poincare(cairo_ctx)
-
-        turtle = turtle.turn(0.1 * param * 0.5 * math.pi)
-        turtle.to_point().draw_poincare(cairo_ctx)
-        turtle.to_line().draw_poincare(cairo_ctx)
+    teichmuller.draw_hexagon(cairo_ctx, turtle, 1.0, 1.0, 1.0)
 
     # Draw hyperbolic circle
     cairo_ctx.save()
@@ -178,5 +181,5 @@ def save_frames():
         print "done!"
 
 if __name__ == '__main__':
-    #pygame_animation()
-    save_frames()
+    pygame_animation()
+    #save_frames()
