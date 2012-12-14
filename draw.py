@@ -87,7 +87,7 @@ def draw_frame(cairo_ctx, size, param):
     cairo_ctx.stroke()
     cairo_ctx.restore()
 
-def main():
+def pygame_animation():
 
     #math.mp.prec = 500
 
@@ -140,5 +140,43 @@ def main():
         pygame.display.flip()
         fpsClock.tick(30)
 
+def save_frames():
+    fps = 30
+    length = 40
+    frames = int(fps * length)
+    size = (1920, 1080)
+    cairo_surf = cairo.ImageSurface(
+        cairo.FORMAT_RGB24,
+        size[0],
+        size[1])
+
+    # Inizialize cairo context
+    cairo_ctx = cairo.Context(cairo_surf)
+
+    # Set up a reasonable coordinate system
+    versor_len = 0.45 * min(size)
+    reflect = cairo.Matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)
+    cairo_ctx.transform(reflect)
+    cairo_ctx.translate(size[0]/2, -size[1]/2)
+    cairo_ctx.scale(versor_len, versor_len)
+
+    cairo_ctx.set_line_width(1.5 / versor_len)
+    cairo_ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+    cairo_ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+
+    for frame in xrange(frames):
+        print "Writing frame %d..." % (frame),
+
+        # Draw the frame
+        param = float(frame) / fps
+        draw_frame(cairo_ctx, size, param)
+
+        # Write it to a file
+        with open('frames/frame_%05d.png' % (frame), 'w') as fout:
+            cairo_surf.write_to_png(fout)
+
+        print "done!"
+
 if __name__ == '__main__':
-    main()
+    #pygame_animation()
+    save_frames()
