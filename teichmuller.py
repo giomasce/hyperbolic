@@ -32,10 +32,10 @@ def draw_hexagon(ctx, pv, a, b, c, color=False):
         pv = pv.turn(0.5 * math.pi)
 
     for line, color in zip(lines, HEXAGON_COLORS):
-        ctx.set_source_rgb(*color)
+        ctx.cairo.set_source_rgb(*color)
         line.draw_poincare(ctx)
 
-    ctx.set_source_rgb(0, 0, 0)
+    ctx.cairo.set_source_rgb(0, 0, 0)
     for point in points:
         point.draw_poincare(ctx)
 

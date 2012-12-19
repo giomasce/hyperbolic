@@ -17,9 +17,9 @@ CIRCLE_LINE_THRESHOLD = 0.000001
 
 class HyperbolicContext:
 
-    def __init__(self, cairo, trasf):
+    def __init__(self, cairo, isom):
         self.cairo = cairo
-        self.trasf = trasf
+        self.isom = isom
 
 class Point:
 
@@ -54,16 +54,20 @@ class Point:
         return self.poincare_coords
 
     def draw_klein(self, ctx):
-        ctx.arc(self.x, self.y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
-        ctx.fill()
-        #ctx.move_to(self.x, self.y)
-        #ctx.line_to(self.x, self.y)
-        #ctx.stroke()
+        p = ctx.isom.map(self)
+        ctx.cairo.arc(p.x, p.y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
+        ctx.cairo.fill()
+        #ctx.cairo.move_to(self.x, self.y)
+        #ctx.cairo.line_to(self.x, self.y)
+        #ctx.cairo.stroke()
 
     def draw_poincare(self, ctx):
-        x, y = self.get_poincare_coords()
-        ctx.arc(x, y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
-        ctx.fill()
+        p = ctx.isom.map(self)
+        #print p.x, p.y
+        x, y = p.get_poincare_coords()
+        #print x, y
+        ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
+        ctx.cairo.fill()
 
     def line_to(self, point):
         point = point.to_point()
@@ -93,6 +97,9 @@ class InfPoint:
         self.alpha = alpha
         self.coords = None
 
+    def __repr__(self):
+        return "InfPoint(alpha=%f)" % (self.alpha)
+
     @classmethod
     def from_xy(self, x, y):
         return InfPoint(math.atan2(y, x))
@@ -120,9 +127,9 @@ class InfPoint:
         return self.to_point().to_eupoint()
 
     def draw_klein(self, ctx):
-        x, y = self.get_coords()
-        ctx.arc(x, y, get_actual_dimension(ctx, POINT_RADIUS), 0, 2*math.pi)
-        ctx.fill()
+        x, y = ctx.isom.map(self.to_point()).get_coords()
+        ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
+        ctx.cairo.fill()
 
     def draw_poincare(self, ctx):
         self.draw_klein(ctx)
@@ -138,37 +145,41 @@ class Line:
         self.p2 = p2
 
     def draw_klein(self, ctx):
-        x1, y1 = self.p1.get_coords()
-        x2, y2 = self.p2.get_coords()
-        ctx.move_to(x1, y1)
-        ctx.line_to(x2, y2)
-        ctx.stroke()
+        p1 = ctx.isom.map(self.p1)
+        p2 = ctx.isom.map(self.p2)
+        x1, y1 = p1.get_coords()
+        x2, y2 = p2.get_coords()
+        ctx.cairo.move_to(x1, y1)
+        ctx.cairo.line_to(x2, y2)
+        ctx.cairo.stroke()
 
     def draw_poincare(self, ctx):
-        ref = self.ref_point()
+        p1 = ctx.isom.map(self.p1)
+        p2 = ctx.isom.map(self.p2)
+        ref = ctx.isom.map(self.ref_point())
         ref_klein = ref.to_eupoint()
         ref_poincare = ref.to_eupoint_poincare()
         sagitta = ref.to_eupoint().distance(ref_poincare)
 
         # If line is too near center, just treat is a line
         if sagitta < CIRCLE_LINE_THRESHOLD:
-            ctx.move_to(*self.p1.get_coords())
-            ctx.line_to(*self.p2.get_coords())
-            ctx.stroke()
+            ctx.cairo.move_to(*p1.get_coords())
+            ctx.cairo.line_to(*p2.get_coords())
+            ctx.cairo.stroke()
 
         # Else compute radius and center point and draw it
         else:
-            semichord = self.p1.to_eupoint().distance(ref.to_eupoint())
+            semichord = p1.to_eupoint().distance(ref.to_eupoint())
             radius = (sagitta**2 + semichord**2) / (2 * sagitta)
             sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
             center = ref_poincare.add(sagitta_versor.multiply(radius))
-            ctx.save()
-            ctx.new_path()
-            ctx.arc(0, 0, 1, 0, 2 * math.pi)
-            ctx.clip()
-            ctx.arc(center.x, center.y, radius, 0.0, 2 * math.pi)
-            ctx.stroke()
-            ctx.restore()
+            ctx.cairo.save()
+            ctx.cairo.new_path()
+            ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
+            ctx.cairo.clip()
+            ctx.cairo.arc(center.x, center.y, radius, 0.0, 2 * math.pi)
+            ctx.cairo.stroke()
+            ctx.cairo.restore()
 
     def to_euline(self):
         x1, y1 = self.p1.get_coords()
@@ -204,6 +215,19 @@ class Line:
     def get_point_coordinate(self, point):
         return self.ref_point().distance(point, line=self)
 
+class Isometry:
+
+    def __init__(self, A=1.0, B=0.0, C=0.0, D=0.0, E=1.0, F=0.0, G=0.0, H=0.0, I=1.0):
+        self.A, self.B, self.C, self.D, self.E, self.F, self.G, self.H, self.I = \
+            A, B, C, D, E, F, G, H, I
+
+    def map(self, p):
+        p = p.to_point()
+        coeff = 1.0 / (self.G * p.x + self.H * p.y + self.I)
+        new_x = coeff * (self.A * p.x + self.B * p.y + self.C)
+        new_y = coeff * (self.D * p.x + self.E * p.y + self.F)
+        return Point(new_x, new_y)
+
 class PointedVector:
 
     def __init__(self, x, y, alpha):
@@ -213,6 +237,7 @@ class PointedVector:
 
         self.metric = None
         self.base = None
+        self.isometry = None
 
     def get_metric(self):
         if self.metric is None:
@@ -244,6 +269,35 @@ class PointedVector:
             self.base = (v1, v2)
 
         return self.base
+
+    def get_isometry(self):
+        """The projective matrix of the isometry that maps (0.0, 0.0,
+        0.0) to this PointedVector."""
+        if self.isometry is None:
+            # Transform the two cardinal lines of the circle
+            l1 = self.to_line()
+            l2 = self.turn(0.5 * math.pi).to_line()
+
+            l1p2 = l1.p2.to_eupoint()
+            l2p2 = l2.p2.to_eupoint()
+
+            def calc_coeffs(l):
+                eupoint = self.to_point().to_eupoint()
+                k = l.p1.to_eupoint().distance(eupoint)
+                h = l.p2.to_eupoint().distance(eupoint)
+                coeff = 2.0 / (h + k)
+                return k * coeff, h * coeff
+
+            k1, h1 = calc_coeffs(l1)
+            k2, h2 = calc_coeffs(l2)
+
+            A, D, G = k1 * l1p2.x - self.x, k1 * l1p2.y - self.y, k1 - 1.0
+            B, E, H = k2 * l2p2.x - self.x, k2 * l2p2.y - self.y, k2 - 1.0
+            C, F, I = self.x, self.y, 1.0
+
+            self.isometry = Isometry(A, B, C, D, E, F, G, H, I)
+
+        return self.isometry
 
     def turn(self, beta):
         v1, v2 = self.get_base()
