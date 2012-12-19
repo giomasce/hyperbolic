@@ -224,6 +224,19 @@ class Isometry:
 
         self.inverse = None
 
+    def to_matrix(self):
+        return mpmath.matrix([[self.A, self.B, self.C],
+                              [self.D, self.E, self.F],
+                              [self.G, self.H, self.I]])
+
+    @classmethod
+    def from_matrix(cls, m):
+        A, B, C, D, E, F, G, H, I = \
+            m[(0,0)], m[(0,1)], m[(0,2)], \
+            m[(1,0)], m[(1,1)], m[(1,2)], \
+            m[(2,0)], m[(2,1)], m[(2,2)]
+        return Isometry(A, B, C, D, E, F, G, H, I)
+
     def map(self, p):
         # TODO - Treat p differently if it is a InfPoint
         p = p.to_point()
@@ -234,17 +247,19 @@ class Isometry:
 
     def get_inverse(self):
         if self.inverse is None:
-            tmp = mpmath.matrix([[self.A, self.B, self.C],
-                                 [self.D, self.E, self.F],
-                                 [self.G, self.H, self.I]])**-1
-            A, B, C, D, E, F, G, H, I = \
-                tmp[(0,0)], tmp[(0,1)], tmp[(0,2)], \
-                tmp[(1,0)], tmp[(1,1)], tmp[(1,2)], \
-                tmp[(2,0)], tmp[(2,1)], tmp[(2,2)]
-            self.inverse = Isometry(A, B, C, D, E, F, G, H, I)
+            self.inverse = Isometry.from_matrix(self.to_matrix() ** -1)
             self.inverse.inverse = self
 
         return self.inverse
+
+    def compose(self, a):
+        m1 = self.to_matrix()
+        m2 = a.to_matrix()
+        return Isometry.from_matrix(m1 * m2)
+
+    @classmethod
+    def from_pvs(cls, pv1, pv2):
+        return pv2.get_isometry().compose(pv1.get_isometry().get_inverse())
 
 class PointedVector:
 
