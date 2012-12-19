@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import mpmath as math
+import mpmath
 
 from euclidean import EuPoint, EuLine, EuCircle, crossratio
 from utils import get_actual_dimension
@@ -221,6 +222,8 @@ class Isometry:
         self.A, self.B, self.C, self.D, self.E, self.F, self.G, self.H, self.I = \
             A, B, C, D, E, F, G, H, I
 
+        self.inverse = None
+
     def map(self, p):
         # TODO - Treat p differently if it is a InfPoint
         p = p.to_point()
@@ -228,6 +231,20 @@ class Isometry:
         new_x = coeff * (self.A * p.x + self.B * p.y + self.C)
         new_y = coeff * (self.D * p.x + self.E * p.y + self.F)
         return Point(new_x, new_y)
+
+    def get_inverse(self):
+        if self.inverse is None:
+            tmp = mpmath.matrix([[self.A, self.B, self.C],
+                                 [self.D, self.E, self.F],
+                                 [self.G, self.H, self.I]])**-1
+            A, B, C, D, E, F, G, H, I = \
+                tmp[(0,0)], tmp[(0,1)], tmp[(0,2)], \
+                tmp[(1,0)], tmp[(1,1)], tmp[(1,2)], \
+                tmp[(2,0)], tmp[(2,1)], tmp[(2,2)]
+            self.inverse = Isometry(A, B, C, D, E, F, G, H, I)
+            self.inverse.inverse = self
+
+        return self.inverse
 
 class PointedVector:
 
