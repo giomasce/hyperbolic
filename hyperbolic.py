@@ -41,7 +41,7 @@ class Point:
         return EuPoint(x, y)
 
     @classmethod
-    def from_eupoint(self, point):
+    def from_eupoint(cls, point):
         return Point(point.x, point.y)
 
     def get_coords(self):
@@ -53,6 +53,13 @@ class Point:
             self.poincare_coords = (mult * self.x, mult * self.y)
 
         return self.poincare_coords
+
+    @classmethod
+    def from_poincare_coords(cls, x, y):
+        mult = 2.0 / (1.0 + EuPoint(x, y).sqnorm())
+        p = Point(mult * x, mult * y)
+        p.poincare_coords = (x, y)
+        return p
 
     def draw_klein(self, ctx):
         p = ctx.isom.map(self)
@@ -245,6 +252,9 @@ class Isometry:
         new_y = coeff * (self.D * p.x + self.E * p.y + self.F)
         return Point(new_x, new_y)
 
+    def map_pv(self, pv):
+        pass
+
     def get_inverse(self):
         if self.inverse is None:
             self.inverse = Isometry.from_matrix(self.to_matrix() ** -1)
@@ -256,6 +266,12 @@ class Isometry:
         m1 = self.to_matrix()
         m2 = a.to_matrix()
         return Isometry.from_matrix(m1 * m2)
+
+    @classmethod
+    def rotation(cls, x, y, alpha):
+        pv1 = PointedVector(x, y, 0.0)
+        pv2 = pv1.turn(alpha)
+        return cls.from_pvs(pv1, pv2)
 
     @classmethod
     def from_pvs(cls, pv1, pv2):

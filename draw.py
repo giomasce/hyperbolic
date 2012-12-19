@@ -22,9 +22,9 @@ from utils import get_actual_dimension
 
 def draw_frame(ctx, size, param):
 
-    pv = hyperbolic.PointedVector(param * 0.05 - 0.7, param * 0.04 - 0.7, param * 0.1 * math.pi)
+    #pv = hyperbolic.PointedVector(param * 0.05 - 0.7, param * 0.04 - 0.7, param * 0.1 * math.pi)
     #pv = hyperbolic.PointedVector(0.0, 0.0, 0.0)
-    ctx.isom = pv.get_isometry()
+    #ctx.isom = pv.get_isometry()
 
     # Settings
     ctx.cairo.set_line_width(get_actual_dimension(ctx.cairo, 1.5))
@@ -92,19 +92,11 @@ def gtk_animation():
 
     gtk.main()
 
-def pygame_animation():
+def init_cairo(size):
 
-    #math.mp.prec = 500
-
-    # Initialize PyGame
-    pygame.init()
-    fpsClock = pygame.time.Clock()
-    pygame.display.set_caption('Hyperbolic!')
-
-    # Initialize a shared buffer between PyGame and cairo
-    size = (0, 0)
-    pygame_surf = pygame.display.set_mode(size, pygame.FULLSCREEN, 32)
-    size = pygame_surf.get_size()
+    #pygame_surf = pygame.display.set_mode(size, pygame.FULLSCREEN, 32)
+    #size = pygame_surf.get_size()
+    pygame_surf = pygame.display.set_mode(size, pygame.RESIZABLE, 32)
     cairo_surf = cairolib.ImageSurface.create_for_data(
         pygame.surfarray.pixels2d(pygame_surf),
         cairolib.FORMAT_RGB24,
@@ -121,6 +113,19 @@ def pygame_animation():
     cairo.translate(size[0]/2, -size[1]/2)
     cairo.scale(versor_len, versor_len)
 
+    return cairo
+
+def pygame_animation():
+
+    #math.mp.prec = 500
+
+    # Initialize PyGame
+    pygame.init()
+    fpsClock = pygame.time.Clock()
+    pygame.display.set_caption('Hyperbolic!')
+
+    size = (640, 480)
+    cairo = init_cairo(size)
     ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry())
 
     while True:
@@ -135,9 +140,31 @@ def pygame_animation():
                 pygame.quit()
                 sys.exit()
 
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.event.post(pygame.event.Event(QUIT))
+
+            elif event.type == VIDEORESIZE:
+                size = event.size
+                cairo = init_cairo(size)
+                ctx.cairo = cairo
+
+            elif event.type == MOUSEBUTTONUP:
+                user_coords = ctx.cairo.device_to_user(*event.pos)
+                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
+                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+                    rot = None
+
+                    # Scroll up
+                    if event.button == 4:
+                        rot = hyperbolic.Isometry.rotation(x, y, 0.1)
+
+                    # Scroll down
+                    elif event.button == 5:
+                        rot = hyperbolic.Isometry.rotation(x, y, -0.1)
+
+                    if rot is not None:
+                        ctx.isom = rot.compose(ctx.isom)
 
         # Finish
         pygame.display.flip()
