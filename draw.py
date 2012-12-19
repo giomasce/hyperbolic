@@ -22,8 +22,8 @@ from utils import get_actual_dimension
 
 def draw_frame(ctx, size, param):
 
-    #pv = hyperbolic.PointedVector(param * 0.05 - 0.2, 0.0, param * 0.0 * math.pi)
-    pv = hyperbolic.PointedVector(0.0, 0.0, 0.0)
+    pv = hyperbolic.PointedVector(param * 0.05 - 0.2, 0.0, param * 0.0 * math.pi)
+    #pv = hyperbolic.PointedVector(0.0, 0.0, 0.0)
     ctx.isom = pv.get_isometry()
 
     # Settings

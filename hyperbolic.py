@@ -156,7 +156,7 @@ class Line:
     def draw_poincare(self, ctx):
         p1 = ctx.isom.map(self.p1)
         p2 = ctx.isom.map(self.p2)
-        ref = ctx.isom.map(self.ref_point())
+        ref = p1.line_to(p2).ref_point()
         ref_klein = ref.to_eupoint()
         ref_poincare = ref.to_eupoint_poincare()
         sagitta = ref.to_eupoint().distance(ref_poincare)
@@ -222,6 +222,7 @@ class Isometry:
             A, B, C, D, E, F, G, H, I
 
     def map(self, p):
+        # TODO - Treat p differently if it is a InfPoint
         p = p.to_point()
         coeff = 1.0 / (self.G * p.x + self.H * p.y + self.I)
         new_x = coeff * (self.A * p.x + self.B * p.y + self.C)
