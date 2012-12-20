@@ -274,6 +274,13 @@ class Isometry:
         return cls.from_pvs(pv1, pv2)
 
     @classmethod
+    def translation(cls, x1, y1, x2, y2):
+        alpha = math.atan2(y2 - y1, x2 - x1)
+        pv1 = PointedVector(x1, y1, alpha)
+        pv2 = PointedVector(x2, y2, alpha)
+        return cls.from_pvs(pv1, pv2)
+
+    @classmethod
     def from_pvs(cls, pv1, pv2):
         return pv2.get_isometry().compose(pv1.get_isometry().get_inverse())
 

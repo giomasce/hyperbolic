@@ -128,6 +128,10 @@ def pygame_animation():
     cairo = init_cairo(size)
     ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry())
 
+    # Movement tracking
+    base_point = None
+    base_isom = None
+
     while True:
         param = 0.001 * pygame.time.get_ticks()
         #param = 10.0
@@ -149,11 +153,35 @@ def pygame_animation():
                 cairo = init_cairo(size)
                 ctx.cairo = cairo
 
+            elif event.type == MOUSEBUTTONDOWN:
+                user_coords = ctx.cairo.device_to_user(*event.pos)
+                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
+                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+
+                    # First button
+                    if event.button == 1:
+                        base_point = (x, y)
+                        base_isom = ctx.isom
+
+            elif event.type == MOUSEMOTION:
+                user_coords = ctx.cairo.device_to_user(*event.pos)
+                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
+                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+
+                    if base_point is not None:
+                        trans = hyperbolic.Isometry.translation(base_point[0], base_point[1], x, y)
+                        ctx.isom = trans.compose(base_isom)
+
             elif event.type == MOUSEBUTTONUP:
                 user_coords = ctx.cairo.device_to_user(*event.pos)
                 if user_coords[0]**2 + user_coords[1]**2 < 1.0:
                     x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
                     rot = None
+
+                    # First button
+                    if event.button == 1:
+                        base_point = None
+                        base_isom = None
 
                     # Scroll up
                     if event.button == 4:

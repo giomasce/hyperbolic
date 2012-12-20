@@ -7,8 +7,17 @@ To run what is available right now, just launch `draw.py`.
 
 ## Commands
 
-You can rotate the hyperbolic plane around a point just moving the
-mouse pointer to that point and scrolling the mouse wheel.
+You can rotate the hyperbolic plane (i.e., making an elliptic
+transformation) around a point just moving the mouse pointer to that
+point and scrolling the mouse wheel.
+
+You can translate the hyperbolic plane (i.e., making a hyperbolic
+transformation) along a segment just clicking in one point and then
+releasing the mouse button in another.
+
+There is so far no way to make parabolic transformations, although you
+can just replace them with elliptic transformations whose fixed point
+is very close to the border.
 
 So far it isn't possibile to do anything else...
 
