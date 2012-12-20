@@ -5,7 +5,6 @@ import mpmath as math
 
 from hyperbolic import Point, InfPoint, Line, PointedVector
 
-
 HEXAGON_COLORS = [(155, 0, 0),
                   (155, 155, 0),
                   (0, 155, 0),
@@ -13,7 +12,9 @@ HEXAGON_COLORS = [(155, 0, 0),
                   (0, 0, 155),
                   (155, 0, 155)]
 
-def draw_hexagon(ctx, pv, a, b, c, color=False):
+EQUILATERAL_HEXAGON = math.acosh(2)
+
+def hexagon_sides(a, b, c):
     cosha, coshb, coshc = map(math.cosh, [a, b, c])
     sinha, sinhb, sinhc = map(math.sinh, [a, b, c])
     sides = [a,
@@ -22,6 +23,10 @@ def draw_hexagon(ctx, pv, a, b, c, color=False):
              math.acosh((coshb * coshc + cosha) / (sinhb * sinhc)),
              c,
              math.acosh((coshc * cosha + coshb) / (sinhc * sinha))]
+    return sides
+
+def draw_hexagon(ctx, pv, a, b, c, color=False):
+    sides = hexagon_sides(a, b, c)
 
     points = []
     lines = []

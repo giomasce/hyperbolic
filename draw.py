@@ -50,7 +50,12 @@ def draw_frame(ctx, size, param):
 
     ctx.cairo.set_source_rgb(0, 0, 0)
     turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
-    teichmuller.draw_hexagon(ctx, turtle, 1.0, 0.5, 2.0, color=True)
+    #teichmuller.draw_hexagon(ctx, turtle, 0.5, 0.25, 0.5, color=True)
+    teichmuller.draw_hexagon(ctx, turtle,
+                             teichmuller.EQUILATERAL_HEXAGON,
+                             teichmuller.EQUILATERAL_HEXAGON,
+                             teichmuller.EQUILATERAL_HEXAGON,
+                             color=True)
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
