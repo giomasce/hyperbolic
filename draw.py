@@ -43,8 +43,8 @@ def draw_frame(ctx, size, param):
     #     ctx.cairo.set_source_rgb(float(i) / 10, float(i) / 10, float(i) / 10)
 
     #     turtle = turtle.advance(1.0)
-    #     turtle.to_point().draw_poincare(ctx)
-    #     turtle.to_line().draw_poincare(ctx)
+    #     turtle.to_point().draw(ctx)
+    #     turtle.to_line().draw(ctx)
 
     #     turtle = turtle.turn(0.1 * param * 0.5 * math.pi)
 
@@ -120,6 +120,16 @@ def init_cairo(size):
 
     return cairo
 
+def get_mouse_coords(ctx, event):
+    user_coords = ctx.cairo.device_to_user(*event.pos)
+    if user_coords[0]**2 + user_coords[1]**2 < 1.0:
+        if ctx.poincare:
+            return hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+        else:
+            return user_coords
+    else:
+        return (None, None)
+
 def pygame_animation():
 
     #math.mp.prec = 500
@@ -131,7 +141,7 @@ def pygame_animation():
 
     size = (640, 480)
     cairo = init_cairo(size)
-    ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry())
+    ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry(), poincare=True)
 
     # Movement tracking
     base_point = None
@@ -159,9 +169,8 @@ def pygame_animation():
                 ctx.cairo = cairo
 
             elif event.type == MOUSEBUTTONDOWN:
-                user_coords = ctx.cairo.device_to_user(*event.pos)
-                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
-                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+                x, y = get_mouse_coords(ctx, event)
+                if x is not None:
 
                     # First button
                     if event.button == 1:
@@ -169,18 +178,16 @@ def pygame_animation():
                         base_isom = ctx.isom
 
             elif event.type == MOUSEMOTION:
-                user_coords = ctx.cairo.device_to_user(*event.pos)
-                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
-                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+                x, y = get_mouse_coords(ctx, event)
+                if x is not None:
 
                     if base_point is not None:
                         trans = hyperbolic.Isometry.translation(base_point[0], base_point[1], x, y)
                         ctx.isom = trans.compose(base_isom)
 
             elif event.type == MOUSEBUTTONUP:
-                user_coords = ctx.cairo.device_to_user(*event.pos)
-                if user_coords[0]**2 + user_coords[1]**2 < 1.0:
-                    x, y = hyperbolic.Point.from_poincare_coords(*user_coords).get_coords()
+                x, y = get_mouse_coords(ctx, event)
+                if x is not None:
                     rot = None
 
                     # First button
@@ -227,7 +234,7 @@ def save_frames():
     cairo.set_line_join(cairolib.LINE_JOIN_ROUND)
     cairo.set_line_cap(cairolib.LINE_CAP_ROUND)
 
-    ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry())
+    ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry(), poincare=True)
 
     for frame in xrange(frames):
         print "Writing frame %d..." % (frame),

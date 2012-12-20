@@ -18,9 +18,10 @@ CIRCLE_LINE_THRESHOLD = 0.000001
 
 class HyperbolicContext:
 
-    def __init__(self, cairo, isom):
+    def __init__(self, cairo, isom, poincare):
         self.cairo = cairo
         self.isom = isom
+        self.poincare = poincare
 
 class Point:
 
@@ -76,6 +77,12 @@ class Point:
         #print x, y
         ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
         ctx.cairo.fill()
+
+    def draw(self, ctx):
+        if ctx.poincare:
+            self.draw_poincare(ctx)
+        else:
+            self.draw_klein(ctx)
 
     def line_to(self, point):
         point = point.to_point()
@@ -139,6 +146,12 @@ class InfPoint:
         ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
         ctx.cairo.fill()
 
+    def draw(self, ctx):
+        if ctx.poincare:
+            self.draw_poincare(ctx)
+        else:
+            self.draw_klein(ctx)
+
     def draw_poincare(self, ctx):
         self.draw_klein(ctx)
 
@@ -188,6 +201,12 @@ class Line:
             ctx.cairo.arc(center.x, center.y, radius, 0.0, 2 * math.pi)
             ctx.cairo.stroke()
             ctx.cairo.restore()
+
+    def draw(self, ctx):
+        if ctx.poincare:
+            self.draw_poincare(ctx)
+        else:
+            self.draw_klein(ctx)
 
     def to_euline(self):
         x1, y1 = self.p1.get_coords()

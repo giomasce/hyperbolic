@@ -38,9 +38,9 @@ def draw_hexagon(ctx, pv, a, b, c, color=False):
 
     for line, color in zip(lines, HEXAGON_COLORS):
         ctx.cairo.set_source_rgb(*color)
-        line.draw_poincare(ctx)
+        line.draw(ctx)
 
     ctx.cairo.set_source_rgb(0, 0, 0)
     for point in points:
-        point.draw_poincare(ctx)
+        point.draw(ctx)
 
