@@ -163,6 +163,9 @@ def pygame_animation():
                 if event.key == K_ESCAPE:
                     pygame.event.post(pygame.event.Event(QUIT))
 
+                if event.key == K_m:
+                    ctx.poincare = not ctx.poincare
+
             elif event.type == VIDEORESIZE:
                 size = event.size
                 cairo = init_cairo(size)

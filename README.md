@@ -5,7 +5,7 @@ it, but it's still oriented towards development and testing.
 
 To run what is available right now, just launch `draw.py`.
 
-## Commands
+## Move the hyperbolic plane
 
 You can rotate the hyperbolic plane (i.e., making an elliptic
 transformation) around a point just moving the mouse pointer to that
@@ -18,6 +18,11 @@ releasing the mouse button in another.
 There is so far no way to make parabolic transformations, although you
 can just replace them with elliptic transformations whose fixed point
 is very close to the border.
+
+## Other commands
+
+ * Pressing key `M` you can switch between the Poincaré and Klein
+   model for the hyperbolic plane.
 
 So far it isn't possibile to do anything else...
 
