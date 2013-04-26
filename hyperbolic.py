@@ -101,6 +101,9 @@ class Point:
 
         return Line(p1, p2)
 
+    def segment_to(self, point):
+        return Segment(self, point)
+
     def distance(self, point, line=None):
         if line is None:
             line = self.line_to(point)
@@ -205,27 +208,36 @@ class Segment:
     def draw_poincare(self, ctx):
         p1 = ctx.isom.map(self.p1)
         p2 = ctx.isom.map(self.p2)
-        ref = p1.line_to(p2).ref_point()
+        line = p1.line_to(p2)
+        ref = line.ref_point()
         ref_klein = ref.to_eupoint()
         ref_poincare = ref.to_eupoint_poincare()
         sagitta = ref.to_eupoint().distance(ref_poincare)
 
         # If line is too near center, just treat is a line
         if sagitta < CIRCLE_LINE_THRESHOLD:
-            ctx.cairo.move_to(*p1.get_coords())
-            ctx.cairo.line_to(*p2.get_coords())
+            ctx.cairo.move_to(*p1.to_eupoint_poincare().get_coords())
+            ctx.cairo.line_to(*p2.to_eupoint_poincare().get_coords())
             ctx.cairo.stroke()
 
         # Else compute radius and center point and draw it
         else:
-            semichord = p1.to_eupoint().distance(ref.to_eupoint())
+            semichord = line.p1.to_eupoint().distance(ref.to_eupoint())
             radius = (sagitta**2 + semichord**2) / (2 * sagitta)
             sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
             center = ref_poincare.add(sagitta_versor.multiply(radius))
-            angle1 = center.angle_to(p1.to_eupoint())
-            angle2 = center.angle_to(p2.to_eupoint())
+            angle1 = center.angle_to(p1.to_eupoint_poincare())
+            angle2 = center.angle_to(p2.to_eupoint_poincare())
+            if (angle2 - angle1) % (2*math.pi) > math.pi:
+                angle1, angle2 = angle2, angle1
             ctx.cairo.arc(center.x, center.y, radius, angle1, angle2)
             ctx.cairo.stroke()
+
+    def draw(self, ctx):
+        if ctx.poincare:
+            self.draw_poincare(ctx)
+        else:
+            self.draw_klein(ctx)
 
 class Line:
 

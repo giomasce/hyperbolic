@@ -30,15 +30,17 @@ def draw_hexagon(ctx, pv, a, b, c, color=False):
 
     points = []
     lines = []
+    segments = []
     for side in sides:
         points.append(pv.to_point())
         lines.append(pv.to_line())
         pv = pv.advance(side)
         pv = pv.turn(0.5 * math.pi)
+        segments.append(points[-1].segment_to(pv.to_point()))
 
-    for line, color in zip(lines, HEXAGON_COLORS):
+    for segment, color in zip(segments, HEXAGON_COLORS):
         ctx.cairo.set_source_rgb(*color)
-        line.draw(ctx)
+        segment.draw(ctx)
 
     ctx.cairo.set_source_rgb(0, 0, 0)
     for point in points:

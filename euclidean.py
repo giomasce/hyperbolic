@@ -27,6 +27,9 @@ class EuPoint:
         self.x = x
         self.y = y
 
+    def get_coords(self):
+        return (self.x, self.y)
+
     def add(self, point):
         return EuPoint(self.x + point.x, self.y + point.y)
 
