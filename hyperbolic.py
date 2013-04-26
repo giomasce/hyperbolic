@@ -123,6 +123,10 @@ class InfPoint:
     def from_eupoint(self, point):
         return InfPoint.from_xy(point.x, point.y)
 
+    @classmethod
+    def from_point(self, point):
+        return InfPoint.from_eupoint(point.to_eupoint())
+
     def normalize(self):
         self.alpha = self.alpha - 2*math.pi * my_trunc(self.alpha / (2*math.pi))
 
@@ -264,12 +268,17 @@ class Isometry:
         return Isometry(A, B, C, D, E, F, G, H, I)
 
     def map(self, p):
-        # TODO - Treat p differently if it is a InfPoint
+        infpoint = False
+        if isinstance(p, InfPoint):
+            infpoint = True
         p = p.to_point()
         coeff = 1.0 / (self.G * p.x + self.H * p.y + self.I)
         new_x = coeff * (self.A * p.x + self.B * p.y + self.C)
         new_y = coeff * (self.D * p.x + self.E * p.y + self.F)
-        return Point(new_x, new_y)
+        if infpoint:
+            return InfPoint.from_xy(new_x, new_y)
+        else:
+            return Point(new_x, new_y)
 
     def map_pv(self, pv):
         pass
