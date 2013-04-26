@@ -32,6 +32,9 @@ class Point:
         self.poincare_coords = None
         self.metric = None
 
+    def __repr__(self):
+        return "Point(x=%f, y=%f)" % (self.x, self.y)
+
     def to_point(self):
         return self
 

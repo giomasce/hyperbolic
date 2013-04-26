@@ -16,8 +16,9 @@ def get_angle_side(num, radius):
     side = p1.to_point().distance(p2, line=side_line)
     return 2.0 * angle, side
 
-def build_polygon_center(num, radius, pv):
-    return [pv.turn(2 * math.pi / float(num)).advance(radius).to_point() for k in xrange(num)]
+def build_polygon_with_center(num, radius, pv):
+    return [pv.turn(2 * math.pi * float(k) / float(num)).advance(radius).to_point() for k in xrange(num)]
 
-def draw_polygon(points):
-    pass
+def draw_polygon(ctx, points):
+    for i in xrange(len(points)):
+        points[i].segment_to(points[(i+1) % len(points)]).draw(ctx)

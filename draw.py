@@ -4,11 +4,11 @@
 import sys
 import mpmath as math
 
-import pygst
-pygst.require("0.10")
-import gst
-import pygtk
-import gtk
+#import pygst
+#pygst.require("0.10")
+#import gst
+#import pygtk
+#import gtk
 import cairo as cairolib
 
 import pygame
@@ -18,6 +18,7 @@ from pygame.locals import *
 import euclidean
 import hyperbolic
 import teichmuller
+import polygons
 from utils import get_actual_dimension
 
 def draw_frame(ctx, size, param):
@@ -51,11 +52,12 @@ def draw_frame(ctx, size, param):
     ctx.cairo.set_source_rgb(0, 0, 0)
     turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
     #teichmuller.draw_hexagon(ctx, turtle, 0.5, 0.25, 0.5, color=True)
-    teichmuller.draw_hexagon(ctx, turtle,
-                             teichmuller.EQUILATERAL_HEXAGON,
-                             teichmuller.EQUILATERAL_HEXAGON,
-                             teichmuller.EQUILATERAL_HEXAGON,
-                             color=True)
+    #teichmuller.draw_hexagon(ctx, turtle,
+    #                         teichmuller.EQUILATERAL_HEXAGON,
+    #                         teichmuller.EQUILATERAL_HEXAGON,
+    #                         teichmuller.EQUILATERAL_HEXAGON,
+    #                         color=True)
+    polygons.draw_polygon(ctx, polygons.build_polygon_with_center(5, 2.0, turtle))
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
