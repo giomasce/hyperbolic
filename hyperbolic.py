@@ -271,13 +271,16 @@ class Line:
     def get_angle(self):
         return math.atan2(self.p2[1] - self.p1[1], self.p2[0] - self.p1[0])
 
-    def to_pv(self):
-        ref_point = self.ref_point()
+    def to_pv(self, point=None):
+        if point is None:
+            point = self.ref_point()
         alpha = self.get_angle()
-        return PointedVector(ref_point.x, ref_point.y, alpha)
+        return PointedVector(point.x, point.y, alpha)
 
     def angle_with(self, line):
-        pass
+        """Returns the absolute angle between the two lines."""
+        intersection = self.intersection(line)
+        return self.to_pv(point=intersection).angle_with(line.to_pv(point=intersection))
 
 class Isometry:
 
@@ -446,12 +449,22 @@ class PointedVector:
         new_point = line.point_at_coordinate(coord + dist)
         return PointedVector(new_point.x, new_point.y, self.alpha)
 
+    def get_there(self):
+        here = self.to_point()
+        dist = 0.5 * (1.0 - here.to_eupoint().norm())
+        there = Point(here.x + dist * math.cos(self.alpha),
+                      here.y + dist * math.sin(self.alpha))
+        return there
+
     def to_point(self):
         return Point(self.x, self.y)
 
     def to_line(self):
         here = self.to_point()
-        dist = 0.5 * (1.0 - here.to_eupoint().norm())
-        there = Point(here.x + dist * math.cos(self.alpha),
-                      here.y + dist * math.sin(self.alpha))
-        return here.line_to(there)
+        return here.line_to(self.get_there())
+
+    def angle_with(self, pv):
+        """Get the angle between the tho PointedVectors, assuming that
+        they're based in the same point. It is between 0 and pi."""
+        return self.angle((math.cos(self.angle), math.sin(self.angle)),
+                          (math.cos(pv.angle), math.sin(pv.angle)))
