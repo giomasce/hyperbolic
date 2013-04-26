@@ -184,6 +184,49 @@ class InfPoint:
     def line_to(self, point):
         return self.to_point().line_to(point)
 
+class Segment:
+    def __init__(self, p1, p2):
+        """Two finite points."""
+        self.p1 = p1
+        self.p2 = p2
+
+    def to_line(self):
+        return p1.line_to(p2)
+
+    def draw_klein(self, ctx):
+        p1 = ctx.isom.map(self.p1)
+        p2 = ctx.isom.map(self.p2)
+        x1, y1 = p1.get_coords()
+        x2, y2 = p2.get_coords()
+        ctx.cairo.move_to(x1, y1)
+        ctx.cairo.line_to(x2, y2)
+        ctx.cairo.stroke()
+
+    def draw_poincare(self, ctx):
+        p1 = ctx.isom.map(self.p1)
+        p2 = ctx.isom.map(self.p2)
+        ref = p1.line_to(p2).ref_point()
+        ref_klein = ref.to_eupoint()
+        ref_poincare = ref.to_eupoint_poincare()
+        sagitta = ref.to_eupoint().distance(ref_poincare)
+
+        # If line is too near center, just treat is a line
+        if sagitta < CIRCLE_LINE_THRESHOLD:
+            ctx.cairo.move_to(*p1.get_coords())
+            ctx.cairo.line_to(*p2.get_coords())
+            ctx.cairo.stroke()
+
+        # Else compute radius and center point and draw it
+        else:
+            semichord = p1.to_eupoint().distance(ref.to_eupoint())
+            radius = (sagitta**2 + semichord**2) / (2 * sagitta)
+            sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
+            center = ref_poincare.add(sagitta_versor.multiply(radius))
+            angle1 = center.angle_to(p1.to_eupoint())
+            angle2 = center.angle_to(p2.to_eupoint())
+            ctx.cairo.arc(center.x, center.y, radius, angle1, angle2)
+            ctx.cairo.stroke()
+
 class Line:
 
     def __init__(self, p1, p2):
@@ -239,6 +282,9 @@ class Line:
         x2, y2 = self.p2.get_coords()
         return EuPoint(x1, y1).line_to(EuPoint(x2, y2))
 
+    def reverse(self):
+        return Line(self.p2, self.p1)
+
     def intersection(self, line):
         try:
             p = Point.from_eupoint(self.to_euline().intersection_line(line.to_euline()))
@@ -277,9 +323,10 @@ class Line:
         alpha = self.get_angle()
         return PointedVector(point.x, point.y, alpha)
 
-    def angle_with(self, line):
+    def angle_with(self, line, intersection=None):
         """Returns the absolute angle between the two lines."""
-        intersection = self.intersection(line)
+        if intersection is None:
+            intersection = self.intersection(line)
         return self.to_pv(point=intersection).angle_with(line.to_pv(point=intersection))
 
 class Isometry:

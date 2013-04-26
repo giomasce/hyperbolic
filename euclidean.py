@@ -66,6 +66,9 @@ class EuPoint:
     def circle_to(self, point):
         return EuCircle(self.x, self.y, self.distance(point))
 
+    def angle_to(self, point):
+        return math.atan2(point.y - self.y, point.x - self.x)
+
 class EuLine:
 
     def __init__(self, a, b, c):
