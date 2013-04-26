@@ -246,6 +246,14 @@ class Line:
     def get_point_coordinate(self, point):
         return self.ref_point().distance(point, line=self)
 
+    def get_angle(self):
+        return math.atan2(self.p2[1] - self.p1[1], self.p2[0] - self.p1[0])
+
+    def to_pv(self):
+        ref_point = self.ref_point()
+        alpha = self.get_angle()
+        return PointedVector(ref_point.x, ref_point.y, alpha)
+
 class Isometry:
 
     def __init__(self, A=1.0, B=0.0, C=0.0, D=0.0, E=1.0, F=0.0, G=0.0, H=0.0, I=1.0):
@@ -309,8 +317,20 @@ class Isometry:
         return cls.from_pvs(pv1, pv2)
 
     @classmethod
+    def reflection(cls, line):
+        pv = line.to_pv()
+        return cls.from_pvs_inverted(pv, pv)
+
+    @classmethod
     def from_pvs(cls, pv1, pv2):
         return pv2.get_isometry().compose(pv1.get_isometry().get_inverse())
+
+    @classmethod
+    def from_pvs_inverted(cls, pv1, pv2):
+        inversion = Isometry(1.0, 0.0, 0.0,
+                             0.0, -1.0, 0.0,
+                             0.0, 0.0, 1.0)
+        return pv2.get_isometry().compose(inversion).compose(pv1.get_isometry().get_inverse())
 
 class PointedVector:
 
@@ -355,8 +375,8 @@ class PointedVector:
         return self.base
 
     def get_isometry(self):
-        """The projective matrix of the isometry that maps (0.0, 0.0,
-        0.0) to this PointedVector."""
+        """The projective matrix of the direct isometry that maps
+        (0.0, 0.0, 0.0) to this PointedVector."""
         if self.isometry is None:
             # Transform the two cardinal lines of the circle
             l1 = self.to_line()
