@@ -38,9 +38,9 @@ def draw_hexagon(ctx, pv, a, b, c, color=False):
         pv = pv.turn(0.5 * math.pi)
         segments.append(points[-1].segment_to(pv.to_point()))
 
-    for segment, color in zip(segments, HEXAGON_COLORS):
+    for line, segment, color in zip(lines, segments, HEXAGON_COLORS):
         ctx.cairo.set_source_rgb(*color)
-        segment.draw(ctx)
+        line.draw(ctx)
 
     ctx.cairo.set_source_rgb(0, 0, 0)
     for point in points:

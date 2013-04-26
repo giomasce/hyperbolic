@@ -152,6 +152,12 @@ class InfPoint:
     def from_point(self, point):
         return InfPoint.from_eupoint(point.to_eupoint())
 
+    def line_to(self, inf_point):
+        return Line(self, inf_point)
+
+    def segment_to(self, inf_point):
+        return Segment(self, inf_point)
+
     def normalize(self):
         self.alpha = self.alpha - 2*math.pi * my_trunc(self.alpha / (2*math.pi))
 
@@ -169,6 +175,9 @@ class InfPoint:
 
     def to_eupoint(self):
         return self.to_point().to_eupoint()
+
+    def to_eupoint_poincare(self):
+        return self.to_eupoint()
 
     def draw_klein(self, ctx):
         x, y = ctx.isom.map(self.to_point()).get_coords()
@@ -189,7 +198,7 @@ class InfPoint:
 
 class Segment:
     def __init__(self, p1, p2):
-        """Two finite points."""
+        """Two finite or infinite points (of the same type)."""
         self.p1 = p1
         self.p2 = p2
 
@@ -246,53 +255,16 @@ class Line:
         self.p1 = p1
         self.p2 = p2
 
-    def draw_klein(self, ctx):
-        p1 = ctx.isom.map(self.p1)
-        p2 = ctx.isom.map(self.p2)
-        x1, y1 = p1.get_coords()
-        x2, y2 = p2.get_coords()
-        ctx.cairo.move_to(x1, y1)
-        ctx.cairo.line_to(x2, y2)
-        ctx.cairo.stroke()
-
-    def draw_poincare(self, ctx):
-        p1 = ctx.isom.map(self.p1)
-        p2 = ctx.isom.map(self.p2)
-        ref = p1.line_to(p2).ref_point()
-        ref_klein = ref.to_eupoint()
-        ref_poincare = ref.to_eupoint_poincare()
-        sagitta = ref.to_eupoint().distance(ref_poincare)
-
-        # If line is too near center, just treat is a line
-        if sagitta < CIRCLE_LINE_THRESHOLD:
-            ctx.cairo.move_to(*p1.get_coords())
-            ctx.cairo.line_to(*p2.get_coords())
-            ctx.cairo.stroke()
-
-        # Else compute radius and center point and draw it
-        else:
-            semichord = p1.to_eupoint().distance(ref.to_eupoint())
-            radius = (sagitta**2 + semichord**2) / (2 * sagitta)
-            sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
-            center = ref_poincare.add(sagitta_versor.multiply(radius))
-            ctx.cairo.save()
-            ctx.cairo.new_path()
-            ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
-            ctx.cairo.clip()
-            ctx.cairo.arc(center.x, center.y, radius, 0.0, 2 * math.pi)
-            ctx.cairo.stroke()
-            ctx.cairo.restore()
-
     def draw(self, ctx):
-        if ctx.poincare:
-            self.draw_poincare(ctx)
-        else:
-            self.draw_klein(ctx)
+        return self.to_segment().draw(ctx)
 
     def to_euline(self):
         x1, y1 = self.p1.get_coords()
         x2, y2 = self.p2.get_coords()
         return EuPoint(x1, y1).line_to(EuPoint(x2, y2))
+
+    def to_segment(self):
+        return self.p1.segment_to(self.p2)
 
     def reverse(self):
         return Line(self.p2, self.p1)
