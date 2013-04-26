@@ -30,6 +30,7 @@ class Point:
         self.y = y
 
         self.poincare_coords = None
+        self.metric = None
 
     def to_point(self):
         return self
@@ -105,6 +106,27 @@ class Point:
             line = self.line_to(point)
         return 0.5 * math.log(crossratio(line.p1.to_eupoint(), line.p2.to_eupoint(),
                                          point.to_eupoint(), self.to_eupoint()))
+
+    def get_metric(self):
+        if self.metric is None:
+            denom = 1.0 - self.x**2 - self.y**2
+            g11 = (1.0 - self.y**2) / denom
+            g12 = (self.x * self.y) / denom
+            g22 = (1.0 - self.x**2) / denom
+            self.metric = (g11, g12, g22)
+
+        return self.metric
+
+    def scal(self, v1, v2):
+        g11, g12, g22 = self.get_metric()
+        return v1[0]*v2[0]*g11 + (v1[0]*v2[1] + v1[1]*v2[0])*g12 + v1[1]*v2[1]*g22
+
+    def angle(self, v1, v2):
+        return math.acos(self.scal(self.normalize(v1), self.normalize(v2)))
+
+    def normalize(self, v):
+        factor = 1.0 / (math.sqrt(self.scal(v, v)))
+        return (v[0]*factor, v[1]*factor)
 
 class InfPoint:
 
@@ -254,6 +276,9 @@ class Line:
         alpha = self.get_angle()
         return PointedVector(ref_point.x, ref_point.y, alpha)
 
+    def angle_with(self, line):
+        pass
+
 class Isometry:
 
     def __init__(self, A=1.0, B=0.0, C=0.0, D=0.0, E=1.0, F=0.0, G=0.0, H=0.0, I=1.0):
@@ -339,27 +364,20 @@ class PointedVector:
         self.y = y
         self.alpha = alpha
 
-        self.metric = None
         self.base = None
         self.isometry = None
 
     def get_metric(self):
-        if self.metric is None:
-            denom = 1.0 - self.x**2 - self.y**2
-            g11 = (1.0 - self.y**2) / denom
-            g12 = (self.x * self.y) / denom
-            g22 = (1.0 - self.x**2) / denom
-            self.metric = (g11, g12, g22)
-
-        return self.metric
+        return self.to_point().get_metric()
 
     def scal(self, v1, v2):
-        g11, g12, g22 = self.get_metric()
-        return v1[0]*v2[0]*g11 + (v1[0]*v2[1] + v1[1]*v2[0])*g12 + v1[1]*v2[1]*g22
+        return self.to_point().scal(v1, v2)
+
+    def angle(self, v1, v2):
+        return self.to_point().angle(v1, v2)
 
     def normalize(self, v):
-        factor = 1.0 / (math.sqrt(self.scal(v, v)))
-        return (v[0]*factor, v[1]*factor)
+        return self.to_point().normalize(v)
 
     def get_base(self):
         """The y component of the first vector is zero."""
