@@ -58,7 +58,7 @@ def draw_frame(ctx, size, param):
     #                         teichmuller.EQUILATERAL_HEXAGON,
     #                         color=True)
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_center(5, 2.0, turtle))
-    polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(10, 0.5 * math.pi, turtle))
+    polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(7, 2.0 * math.pi / 3, turtle))
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)

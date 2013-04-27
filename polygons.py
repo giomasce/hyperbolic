@@ -26,21 +26,32 @@ def get_side_from_radius(num, radius):
     side = p1.to_point().distance(p2.to_point())
     return side
 
+RADIUS_FROM_SIDE_CACHE = {}
+RADIUS_FROM_ANGLE_CACHE = {}
+
 def get_radius_from_side(num, side):
-    func = lambda x: get_side_from_radius(num, x) - side
-    radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
-    if root_results.converged:
-        return radius
-    else:
-        raise Exception("Could not compute radius")
+    if (num, side) not in RADIUS_FROM_SIDE_CACHE:
+        func = lambda x: get_side_from_radius(num, x) - side
+        radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
+        if root_results.converged:
+            RADIUS_FROM_SIDE_CACHE[(num, side)] = radius
+        else:
+            raise Exception("Could not compute radius")
+    return RADIUS_FROM_SIDE_CACHE[(num, side)]
 
 def get_radius_from_angle(num, angle):
-    func = lambda x: get_angle_from_radius(num, x) - angle
-    radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
-    if root_results.converged:
-        return radius
-    else:
-        raise Exception("Could not compute radius")
+    if (num, angle) not in RADIUS_FROM_ANGLE_CACHE:
+        func = lambda x: get_angle_from_radius(num, x) - angle
+        radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
+        if root_results.converged:
+            RADIUS_FROM_ANGLE_CACHE[(num, angle)] = radius
+        else:
+            raise Exception("Could not compute radius")
+    return RADIUS_FROM_ANGLE_CACHE[(num, angle)]
+
+def flush_inversion_caches():
+    RADIUS_FROM_SIDE_CACHE = {}
+    RADIUS_FROM_ANGLE_CACHE = {}
 
 def build_polygon_with_center(num, center, pv):
     return [pv.turn(2 * math.pi * float(k) / float(num)).advance(radius).to_point() for k in xrange(num)]
