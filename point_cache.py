@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import mpmath as math
+import math
 
 class TrivialPointCache:
 
@@ -37,7 +37,5 @@ class GridApproximationPointCache:
         for x1 in [x-1, x, x+1]:
             for y1 in [y-1, y, y+1]:
                 if (x1, y1) in self.points:
-                    print "HIT"
                     return True
-        print "MISS"
         return False

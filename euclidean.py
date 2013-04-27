@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import mpmath as math
+import math
 
 def det2(a, b, c, d):
     return a*d - b*c

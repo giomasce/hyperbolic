@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import mpmath as math
+import math
 
 #import pygst
 #pygst.require("0.10")
@@ -216,9 +216,6 @@ def pygame_animation():
         # Finish
         pygame.display.flip()
         fpsClock.tick(30)
-
-        #pygame.time.wait(500000)
-        break
 
 def save_frames():
     fps = 30

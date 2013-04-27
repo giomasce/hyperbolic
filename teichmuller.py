@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import mpmath as math
+import math
 
 from hyperbolic import Point, InfPoint, Line, PointedVector
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import mpmath as math
+import math
 from scipy import optimize
 
 from hyperbolic import Point, PointedVector, Line
@@ -96,14 +96,8 @@ def draw_polygon(ctx, points):
 
 CACHE_EPSILON = 0.01
 FAR_FIELD_EPSILON = 0.01
-CALLS = 0
-POLYGONS = 0
 
 def draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=None):
-    global CALLS, POLYGONS
-    CALLS += 1
-    print pv, CALLS, POLYGONS
-
     if point_cache is None:
         point_cache = GridApproximationPointCache(CACHE_EPSILON)
 
@@ -116,7 +110,6 @@ def draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=None):
         point_cache.store(center)
         pvs = build_polygon_with_angle(side_num, angle, pv)
         draw_polygon(ctx, pvs)
-        POLYGONS += 1
         if min(map(lambda x: x.to_point().to_eupoint().sqnorm(), pvs)) > 1.0 - FAR_FIELD_EPSILON:
             return
         for pv in pvs:

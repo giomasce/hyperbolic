@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import mpmath as math
-import mpmath
+import math
 
 from euclidean import EuPoint, EuLine, EuCircle, crossratio
 from utils import get_actual_dimension
@@ -326,19 +325,6 @@ class Isometry:
 
         self.inverse = None
 
-    def to_matrix(self):
-        return mpmath.matrix([[self.A, self.B, self.C],
-                              [self.D, self.E, self.F],
-                              [self.G, self.H, self.I]])
-
-    @classmethod
-    def from_matrix(cls, m):
-        A, B, C, D, E, F, G, H, I = \
-            m[(0,0)], m[(0,1)], m[(0,2)], \
-            m[(1,0)], m[(1,1)], m[(1,2)], \
-            m[(2,0)], m[(2,1)], m[(2,2)]
-        return Isometry(A, B, C, D, E, F, G, H, I)
-
     def map(self, p):
         infpoint = False
         if isinstance(p, InfPoint):
@@ -357,15 +343,33 @@ class Isometry:
 
     def get_inverse(self):
         if self.inverse is None:
-            self.inverse = Isometry.from_matrix(self.to_matrix() ** -1)
+            det = self.A * self.E * self.I + self.B * self.F * self.G + self.D * self.H * self.C  \
+                - self.G * self.E * self.C - self.D * self.B * self.I - self.A * self.H * self.F
+            self.inverse = Isometry(
+                ( self.E * self.I - self.F * self.H) / det,
+                (-self.D * self.I + self.F * self.G) / det,
+                ( self.D * self.E - self.G * self.H) / det,
+                (-self.B * self.I + self.C * self.H) / det,
+                ( self.A * self.I - self.C * self.G) / det,
+                (-self.A * self.H + self.B * self.G) / det,
+                ( self.B * self.F - self.E * self.C) / det,
+                (-self.A * self.F + self.C * self.D) / det,
+                ( self.A * self.E - self.B * self.D) / det)
             self.inverse.inverse = self
 
         return self.inverse
 
     def compose(self, a):
-        m1 = self.to_matrix()
-        m2 = a.to_matrix()
-        return Isometry.from_matrix(m1 * m2)
+        return Isometry(
+            self.A * a.A + self.B * a.D + self.C * a.G,
+            self.A * a.B + self.B * a.E + self.C * a.H,
+            self.A * a.A + self.B * a.F + self.C * a.I,
+            self.D * a.A + self.E * a.D + self.F * a.G,
+            self.D * a.B + self.E * a.E + self.F * a.H,
+            self.D * a.A + self.E * a.F + self.F * a.I,
+            self.G * a.A + self.H * a.D + self.I * a.G,
+            self.G * a.B + self.H * a.E + self.I * a.H,
+            self.G * a.A + self.H * a.F + self.I * a.I)
 
     @classmethod
     def rotation(cls, x, y, alpha):
