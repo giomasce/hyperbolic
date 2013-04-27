@@ -325,6 +325,10 @@ class Isometry:
 
         self.inverse = None
 
+    def __repr__(self):
+        #return "Isometry(A=%f, B=%f, C=%f, D=%f, E=%f, F=%f, G=%f, H=%f, I=%f)" % (self.A, self.B, self.C, self.D, self.E, self.F, self.G, self.H, self.I)
+        return "Isometry([%f, %f, %f; %f, %f, %f; %f, %f, %f])" % (self.A, self.B, self.C, self.D, self.E, self.F, self.G, self.H, self.I)
+
     def map(self, p):
         infpoint = False
         if isinstance(p, InfPoint):
@@ -346,30 +350,33 @@ class Isometry:
             det = self.A * self.E * self.I + self.B * self.F * self.G + self.D * self.H * self.C  \
                 - self.G * self.E * self.C - self.D * self.B * self.I - self.A * self.H * self.F
             self.inverse = Isometry(
-                ( self.E * self.I - self.F * self.H) / det,
-                (-self.D * self.I + self.F * self.G) / det,
-                ( self.D * self.E - self.G * self.H) / det,
-                (-self.B * self.I + self.C * self.H) / det,
-                ( self.A * self.I - self.C * self.G) / det,
-                (-self.A * self.H + self.B * self.G) / det,
-                ( self.B * self.F - self.E * self.C) / det,
-                (-self.A * self.F + self.C * self.D) / det,
-                ( self.A * self.E - self.B * self.D) / det)
+                ( self.E * self.I - self.F * self.H) / det, # A
+                (-self.B * self.I + self.C * self.H) / det, # D
+                ( self.B * self.F - self.E * self.C) / det, # G
+                (-self.D * self.I + self.F * self.G) / det, # B
+                ( self.A * self.I - self.C * self.G) / det, # E
+                (-self.A * self.F + self.C * self.D) / det, # H
+                ( self.D * self.H - self.G * self.E) / det, # C
+                (-self.A * self.H + self.B * self.G) / det, # F
+                ( self.A * self.E - self.B * self.D) / det) # I
             self.inverse.inverse = self
 
+        #print det, self, self.inverse
         return self.inverse
 
     def compose(self, a):
-        return Isometry(
+        composite = Isometry(
             self.A * a.A + self.B * a.D + self.C * a.G,
             self.A * a.B + self.B * a.E + self.C * a.H,
-            self.A * a.A + self.B * a.F + self.C * a.I,
+            self.A * a.C + self.B * a.F + self.C * a.I,
             self.D * a.A + self.E * a.D + self.F * a.G,
             self.D * a.B + self.E * a.E + self.F * a.H,
-            self.D * a.A + self.E * a.F + self.F * a.I,
+            self.D * a.C + self.E * a.F + self.F * a.I,
             self.G * a.A + self.H * a.D + self.I * a.G,
             self.G * a.B + self.H * a.E + self.I * a.H,
-            self.G * a.A + self.H * a.F + self.I * a.I)
+            self.G * a.C + self.H * a.F + self.I * a.I)
+        #print self, a, composite
+        return composite
 
     @classmethod
     def rotation(cls, x, y, alpha):
