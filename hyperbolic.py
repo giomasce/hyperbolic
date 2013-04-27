@@ -302,7 +302,9 @@ class Line:
         return self.ref_point().distance(point, line=self)
 
     def get_angle(self):
-        return math.atan2(self.p2[1] - self.p1[1], self.p2[0] - self.p1[0])
+        p1 = self.p1.to_point()
+        p2 = self.p2.to_point()
+        return math.atan2(p2.y - p1.y, p2.x - p1.x)
 
     def to_pv(self, point=None):
         if point is None:
@@ -500,5 +502,5 @@ class PointedVector:
     def angle_with(self, pv):
         """Get the angle between the tho PointedVectors, assuming that
         they're based in the same point. It is between 0 and pi."""
-        return self.angle((math.cos(self.angle), math.sin(self.angle)),
-                          (math.cos(pv.angle), math.sin(pv.angle)))
+        return self.angle((math.cos(self.alpha), math.sin(self.alpha)),
+                          (math.cos(pv.alpha), math.sin(pv.alpha)))

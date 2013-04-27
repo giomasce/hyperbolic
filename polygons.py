@@ -7,7 +7,8 @@ from scipy import optimize
 
 from hyperbolic import Point, PointedVector, Line
 
-MAX_SEARCH = 100.0
+MIN_SEARCH = 0.00000001
+MAX_SEARCH = 10.0
 
 def get_angle_from_radius(num, radius):
     origin = PointedVector(0.0, 0.0, 0.0)
@@ -27,7 +28,7 @@ def get_side_from_radius(num, radius):
 
 def get_radius_from_side(num, side):
     func = lambda x: get_side_from_radius(num, x) - side
-    radius, root_results = optimize.brentq(func, 0.0, MAX_SEARCH, full_output=True)
+    radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
     if root_results.converged:
         return radius
     else:
@@ -35,14 +36,34 @@ def get_radius_from_side(num, side):
 
 def get_radius_from_angle(num, angle):
     func = lambda x: get_angle_from_radius(num, x) - angle
-    radius, root_results = optimize.brentq(func, 0.0, MAX_SEARCH, full_output=True)
+    radius, root_results = optimize.brentq(func, MIN_SEARCH, MAX_SEARCH, full_output=True)
     if root_results.converged:
         return radius
     else:
         raise Exception("Could not compute radius")
 
-def build_polygon_with_center(num, radius, pv):
+def build_polygon_with_center(num, center, pv):
     return [pv.turn(2 * math.pi * float(k) / float(num)).advance(radius).to_point() for k in xrange(num)]
+
+def build_polygon_with_side(num, side, pv):
+    radius = get_radius_from_side(num, side)
+    angle = get_angle_from_radius(num, radius)
+    points = [pv.to_point()]
+    for i in xrange(num - 1):
+        pv.advance(side)
+        pv.turn(math.pi - angle)
+        points.append(pv.to_point())
+    return points
+
+def build_polygon_with_angle(num, angle, pv):
+    radius = get_radius_from_angle(num, angle)
+    side = get_side_from_radius(num, radius)
+    points = [pv.to_point()]
+    for i in xrange(num - 1):
+        pv = pv.advance(side)
+        pv = pv.turn(math.pi - angle)
+        points.append(pv.to_point())
+    return points
 
 def draw_polygon(ctx, points):
     for i in xrange(len(points)):
