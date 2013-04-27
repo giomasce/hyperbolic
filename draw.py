@@ -58,7 +58,8 @@ def draw_frame(ctx, size, param):
     #                         teichmuller.EQUILATERAL_HEXAGON,
     #                         color=True)
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_center(5, 2.0, turtle))
-    polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(7, 2.0 * math.pi / 3, turtle))
+    #polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(7, 2.0 * math.pi / 3, turtle))
+    polygons.draw_regular_tessellation(ctx, 7, 3, turtle)
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
@@ -215,6 +216,9 @@ def pygame_animation():
         # Finish
         pygame.display.flip()
         fpsClock.tick(30)
+
+        #pygame.time.wait(500000)
+        break
 
 def save_frames():
     fps = 30

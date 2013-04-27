@@ -406,6 +406,9 @@ class PointedVector:
         self.base = None
         self.isometry = None
 
+    def __repr__(self):
+        return "PointedVector(x=%f, y=%f, alpha=%f)" % (self.x, self.y, self.alpha)
+
     def get_metric(self):
         return self.to_point().get_metric()
 
@@ -484,6 +487,9 @@ class PointedVector:
         coord = line.get_point_coordinate(point)
         new_point = line.point_at_coordinate(coord + dist)
         return PointedVector(new_point.x, new_point.y, self.alpha)
+
+    def reverse(self):
+        return PointedVector(self.x, self.y, math.pi + self.alpha)
 
     def get_there(self):
         here = self.to_point()

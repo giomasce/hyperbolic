@@ -6,6 +6,7 @@ import mpmath as math
 from scipy import optimize
 
 from hyperbolic import Point, PointedVector, Line
+from point_cache import GridApproximationPointCache
 
 MIN_SEARCH = 0.00000001
 MAX_SEARCH = 10.0
@@ -59,23 +60,64 @@ def build_polygon_with_center(num, center, pv):
 def build_polygon_with_side(num, side, pv):
     radius = get_radius_from_side(num, side)
     angle = get_angle_from_radius(num, radius)
-    points = [pv.to_point()]
-    for i in xrange(num - 1):
-        pv.advance(side)
-        pv.turn(math.pi - angle)
-        points.append(pv.to_point())
+    points = []
+    for i in xrange(num):
+        pv = pv.advance(side)
+        points.append(pv.reverse())
+        pv = pv.turn(math.pi - angle)
     return points
 
 def build_polygon_with_angle(num, angle, pv):
     radius = get_radius_from_angle(num, angle)
     side = get_side_from_radius(num, radius)
-    points = [pv.to_point()]
-    for i in xrange(num - 1):
+    points = []
+    for i in xrange(num):
         pv = pv.advance(side)
+        points.append(pv.reverse())
         pv = pv.turn(math.pi - angle)
-        points.append(pv.to_point())
     return points
+
+def get_center_with_side(num, side, pv):
+    radius = get_radius_from_side(num, side)
+    angle = get_angle_from_radius(num, radius)
+    pv.turn(0.5 * angle)
+    pv.advance(radius)
+    return pv.to_point()
+
+def get_center_with_angle(num, angle, pv):
+    radius = get_radius_from_angle(num, angle)
+    pv.turn(0.5 * angle)
+    pv.advance(radius)
+    return pv.to_point()
 
 def draw_polygon(ctx, points):
     for i in xrange(len(points)):
-        points[i].segment_to(points[(i+1) % len(points)]).draw(ctx)
+        points[i].to_point().segment_to(points[(i+1) % len(points)].to_point()).draw(ctx)
+
+CACHE_EPSILON = 0.01
+FAR_FIELD_EPSILON = 0.01
+CALLS = 0
+POLYGONS = 0
+
+def draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=None):
+    global CALLS, POLYGONS
+    CALLS += 1
+    print pv, CALLS, POLYGONS
+
+    if point_cache is None:
+        point_cache = GridApproximationPointCache(CACHE_EPSILON)
+
+    angle = 2.0 * math.pi / float(valence_num)
+    center = get_center_with_angle(side_num, angle, pv)
+
+    if point_cache.query(center):
+        return
+    else:
+        point_cache.store(center)
+        pvs = build_polygon_with_angle(side_num, angle, pv)
+        draw_polygon(ctx, pvs)
+        POLYGONS += 1
+        if min(map(lambda x: x.to_point().to_eupoint().sqnorm(), pvs)) > 1.0 - FAR_FIELD_EPSILON:
+            return
+        for pv in pvs:
+            draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=point_cache)
