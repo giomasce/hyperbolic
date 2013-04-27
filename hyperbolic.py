@@ -198,6 +198,8 @@ class InfPoint:
     def line_to(self, point):
         return self.to_point().line_to(point)
 
+SEGMENT_POINCARE_FAR_FIELD_THRESHOLD = 0.1
+
 class Segment:
     def __init__(self, p1, p2):
         """Two finite or infinite points (of the same type)."""
@@ -224,11 +226,13 @@ class Segment:
         ref_klein = ref.to_eupoint()
         ref_poincare = ref.to_eupoint_poincare()
         sagitta = ref.to_eupoint().distance(ref_poincare)
+        p1_pc = p1.to_eupoint_poincare()
+        p2_pc = p2.to_eupoint_poincare()
 
         # If line is too near center, just treat is a line
-        if sagitta < CIRCLE_LINE_THRESHOLD:
-            ctx.cairo.move_to(*p1.to_eupoint_poincare().get_coords())
-            ctx.cairo.line_to(*p2.to_eupoint_poincare().get_coords())
+        if sagitta < CIRCLE_LINE_THRESHOLD:# or min(p1_pc.sqnorm(), p2_pc.sqnorm()) > 1.0 - SEGMENT_POINCARE_FAR_FIELD_THRESHOLD:
+            ctx.cairo.move_to(*p1_pc.get_coords())
+            ctx.cairo.line_to(*p2_pc.get_coords())
             ctx.cairo.stroke()
 
         # Else compute radius and center point and draw it
@@ -237,8 +241,8 @@ class Segment:
             radius = (sagitta**2 + semichord**2) / (2 * sagitta)
             sagitta_versor = ref_klein.subtract(ref_poincare).normalize()
             center = ref_poincare.add(sagitta_versor.multiply(radius))
-            angle1 = center.angle_to(p1.to_eupoint_poincare())
-            angle2 = center.angle_to(p2.to_eupoint_poincare())
+            angle1 = center.angle_to(p1_pc)
+            angle2 = center.angle_to(p2_pc)
             if (angle2 - angle1) % (2*math.pi) > math.pi:
                 angle1, angle2 = angle2, angle1
             ctx.cairo.arc(center.x, center.y, radius, angle1, angle2)

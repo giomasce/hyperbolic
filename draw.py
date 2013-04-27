@@ -21,6 +21,8 @@ import teichmuller
 import polygons
 from utils import get_actual_dimension
 
+tessellation = polygons.build_regular_tessellation(5, 5, hyperbolic.PointedVector(0.0, 0.0, 0.0))
+
 def draw_frame(ctx, size, param):
 
     #pv = hyperbolic.PointedVector(param * 0.05 - 0.7, param * 0.04 - 0.7, param * 0.1 * math.pi)
@@ -28,7 +30,8 @@ def draw_frame(ctx, size, param):
     #ctx.isom = pv.get_isometry()
 
     # Settings
-    ctx.cairo.set_line_width(get_actual_dimension(ctx.cairo, 1.5))
+    ctx.cairo.set_antialias(cairolib.ANTIALIAS_SUBPIXEL)
+    ctx.cairo.set_line_width(get_actual_dimension(ctx.cairo, 1.0))
     ctx.cairo.set_line_join(cairolib.LINE_JOIN_ROUND)
     ctx.cairo.set_line_cap(cairolib.LINE_CAP_ROUND)
 
@@ -59,7 +62,7 @@ def draw_frame(ctx, size, param):
     #                         color=True)
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_center(5, 2.0, turtle))
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(7, 2.0 * math.pi / 3, turtle))
-    polygons.draw_regular_tessellation(ctx, 7, 3, turtle)
+    polygons.draw_polygons(ctx, tessellation)
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)

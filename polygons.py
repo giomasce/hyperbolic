@@ -94,12 +94,18 @@ def draw_polygon(ctx, points):
     for i in xrange(len(points)):
         points[i].to_point().segment_to(points[(i+1) % len(points)].to_point()).draw(ctx)
 
-CACHE_EPSILON = 0.01
-FAR_FIELD_EPSILON = 0.01
+def draw_polygons(ctx, polygons):
+    for points in polygons:
+        draw_polygon(ctx, points)
 
-def draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=None):
+CACHE_EPSILON = 0.0000001
+FAR_FIELD_EPSILON = 0.0001
+
+def build_regular_tessellation(side_num, valence_num, pv, point_cache=None, polygons=None):
     if point_cache is None:
         point_cache = GridApproximationPointCache(CACHE_EPSILON)
+    if polygons is None:
+        polygons = []
 
     angle = 2.0 * math.pi / float(valence_num)
     center = get_center_with_angle(side_num, angle, pv)
@@ -109,8 +115,11 @@ def draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=None):
     else:
         point_cache.store(center)
         pvs = build_polygon_with_angle(side_num, angle, pv)
-        draw_polygon(ctx, pvs)
+        polygons.append(pvs)
+        #draw_polygon(ctx, pvs)
         if min(map(lambda x: x.to_point().to_eupoint().sqnorm(), pvs)) > 1.0 - FAR_FIELD_EPSILON:
             return
         for pv in pvs:
-            draw_regular_tessellation(ctx, side_num, valence_num, pv, point_cache=point_cache)
+            build_regular_tessellation(side_num, valence_num, pv, point_cache=point_cache, polygons=polygons)
+
+    return polygons
