@@ -15,7 +15,7 @@ def my_trunc(x):
         return math.trunc(x) - 1.0
 
 POINT_RADIUS = 3.5
-CIRCLE_LINE_THRESHOLD = 0.000001
+CIRCLE_LINE_THRESHOLD = 0.1
 SEGMENT_CACHE_THRESHOLD = 0.0001
 
 class HyperbolicContext:
@@ -68,27 +68,43 @@ class Point:
         p.poincare_coords = (x, y)
         return p
 
-    def draw_klein(self, ctx):
-        p = ctx.isom.map(self)
-        ctx.cairo.arc(p.x, p.y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
-        ctx.cairo.fill()
+    def draw_klein(self, ctx, dont_map=False):
+        if dont_map:
+            p = self
+        else:
+            p = ctx.isom.map(self)
+        #ctx.cairo.arc(p.x, p.y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
+        #ctx.cairo.fill()
+        actual_radius = get_actual_dimension(ctx.cairo, POINT_RADIUS)
+        p1 = tuple(map(int, ctx.cairo.user_to_device(p.x - actual_radius, p.y + actual_radius)))
+        p2 = tuple(map(int, ctx.cairo.user_to_device(p.x + actual_radius, p.y - actual_radius)))
+        ctx.image_draw.arc([p1[0], p1[1], p2[0], p2[1]], 0, 360, fill=(0, 255, 0))
+
+        # Old code
         #ctx.cairo.move_to(self.x, self.y)
         #ctx.cairo.line_to(self.x, self.y)
         #ctx.cairo.stroke()
 
-    def draw_poincare(self, ctx):
-        p = ctx.isom.map(self)
+    def draw_poincare(self, ctx, dont_map=False):
+        if dont_map:
+            p = self
+        else:
+            p = ctx.isom.map(self)
         #print p.x, p.y
         x, y = p.get_poincare_coords()
         #print x, y
-        ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
-        ctx.cairo.fill()
+        # ctx.cairo.arc(x, y, get_actual_dimension(ctx.cairo, POINT_RADIUS), 0, 2*math.pi)
+        # ctx.cairo.fill()
+        actual_radius = get_actual_dimension(ctx.cairo, POINT_RADIUS)
+        p1 = tuple(map(int, ctx.cairo.user_to_device(x - actual_radius, y + actual_radius)))
+        p2 = tuple(map(int, ctx.cairo.user_to_device(x + actual_radius, y - actual_radius)))
+        ctx.image_draw.arc([p1[0], p1[1], p2[0], p2[1]], 0, 360, fill=(0, 255, 0))
 
-    def draw(self, ctx):
+    def draw(self, ctx, dont_map=False):
         if ctx.poincare:
-            self.draw_poincare(ctx)
+            self.draw_poincare(ctx, dont_map=dont_map)
         else:
-            self.draw_klein(ctx)
+            self.draw_klein(ctx, dont_map=dont_map)
 
     def line_to(self, point):
         point = point.to_point()
@@ -215,11 +231,14 @@ class Segment:
     def draw_klein(self, ctx):
         p1 = ctx.isom.map(self.p1)
         p2 = ctx.isom.map(self.p2)
-        x1, y1 = p1.get_coords()
-        x2, y2 = p2.get_coords()
-        ctx.cairo.move_to(x1, y1)
-        ctx.cairo.line_to(x2, y2)
-        ctx.cairo.stroke()
+        # x1, y1 = p1.get_coords()
+        # x2, y2 = p2.get_coords()
+        # ctx.cairo.move_to(x1, y1)
+        # ctx.cairo.line_to(x2, y2)
+        # ctx.cairo.stroke()
+        p1_pil = tuple(map(int, ctx.cairo.user_to_device(*p1.get_coords())))
+        p2_pil = tuple(map(int, ctx.cairo.user_to_device(*p2.get_coords())))
+        ctx.image_draw.line([p1_pil, p2_pil], fill=(0, 0, 0))
 
     def draw_poincare(self, ctx):
         p1 = ctx.isom.map(self.p1)
@@ -234,9 +253,12 @@ class Segment:
 
         # If line is too near center, just treat is a line
         if sagitta < CIRCLE_LINE_THRESHOLD:# or min(p1_pc.sqnorm(), p2_pc.sqnorm()) > 1.0 - SEGMENT_POINCARE_FAR_FIELD_THRESHOLD:
-            ctx.cairo.move_to(*p1_pc.get_coords())
-            ctx.cairo.line_to(*p2_pc.get_coords())
-            ctx.cairo.stroke()
+            #ctx.cairo.move_to(*p1_pc.get_coords())
+            #ctx.cairo.line_to(*p2_pc.get_coords())
+            #ctx.cairo.stroke()
+            p1_pil = tuple(map(int, ctx.cairo.user_to_device(*p1_pc.get_coords())))
+            p2_pil = tuple(map(int, ctx.cairo.user_to_device(*p2_pc.get_coords())))
+            ctx.image_draw.line([p1_pil, p2_pil], fill=(0, 0, 0))
 
         # Else compute radius and center point and draw it
         else:
@@ -248,8 +270,19 @@ class Segment:
             angle2 = center.angle_to(p2_pc)
             if (angle2 - angle1) % (2*math.pi) > math.pi:
                 angle1, angle2 = angle2, angle1
-            ctx.cairo.arc(center.x, center.y, radius, angle1, angle2)
-            ctx.cairo.stroke()
+            angle1 = angle1 % (2*math.pi)
+            angle2 = angle2 % (2*math.pi)
+            #print angle1, angle2
+            #ctx.cairo.arc(center.x, center.y, radius, angle1, angle2) 
+            #ctx.cairo.stroke()
+            p1 = tuple(map(int, ctx.cairo.user_to_device(center.x - radius, center.y + radius)))
+            p2 = tuple(map(int, ctx.cairo.user_to_device(center.x + radius, center.y - radius)))
+            #Point(*center.get_coords()).draw_klein(ctx, dont_map=True)
+            #print p1, p2
+            #print angle1, angle2
+            #ctx.image_draw.arc([p1[0], p1[1], p2[0], p2[1]], 0, 360, fill=(0, 128, 0))
+            ctx.image_draw.arc([p1[0], p1[1], p2[0], p2[1]], -int(angle2 * 180.0 / math.pi), -int(angle1 * 180.0 / math.pi), fill=(0, 0, 0))
+            #ctx.image_draw.line([p1, p2], fill=(0, 0, 128))
 
     def draw(self, ctx):
         if ctx.poincare:

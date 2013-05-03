@@ -10,6 +10,8 @@ import math
 #import pygtk
 #import gtk
 import cairo as cairolib
+import Image
+import ImageDraw
 
 import pygame
 import pygame.gfxdraw
@@ -31,18 +33,23 @@ def draw_frame(ctx, size, param):
     #ctx.isom = pv.get_isometry()
 
     # Settings
-    ctx.cairo.set_antialias(cairolib.ANTIALIAS_SUBPIXEL)
-    ctx.cairo.set_line_width(get_actual_dimension(ctx.cairo, 1.0))
-    ctx.cairo.set_line_join(cairolib.LINE_JOIN_ROUND)
-    ctx.cairo.set_line_cap(cairolib.LINE_CAP_ROUND)
+    # ctx.cairo.set_antialias(cairolib.ANTIALIAS_SUBPIXEL)
+    # ctx.cairo.set_line_width(get_actual_dimension(ctx.cairo, 1.0))
+    # ctx.cairo.set_line_join(cairolib.LINE_JOIN_ROUND)
+    # ctx.cairo.set_line_cap(cairolib.LINE_CAP_ROUND)
 
     # Everything white
-    ctx.cairo.save()
-    ctx.cairo.identity_matrix()
-    ctx.cairo.rectangle(0, 0, size[0], size[1])
-    ctx.cairo.set_source_rgb(255, 255, 255)
-    ctx.cairo.fill()
-    ctx.cairo.restore()
+    # ctx.cairo.save()
+    # ctx.cairo.identity_matrix()
+    # ctx.cairo.rectangle(0, 0, size[0], size[1])
+    # ctx.cairo.set_source_rgb(255, 255, 255)
+    # ctx.cairo.fill()
+    # ctx.cairo.restore()
+
+    # Everything white
+    ctx.image_draw.rectangle([(0, 0), size], fill=(255, 255, 255))
+
+    #ctx.image_draw.rectangle([(10, 10), (200, 200)], fill=(128, 0, 0))
 
     # for i in xrange(10):
     #     ctx.cairo.set_source_rgb(float(i) / 10, float(i) / 10, float(i) / 10)
@@ -53,7 +60,7 @@ def draw_frame(ctx, size, param):
 
     #     turtle = turtle.turn(0.1 * param * 0.5 * math.pi)
 
-    ctx.cairo.set_source_rgb(0, 0, 0)
+    #ctx.cairo.set_source_rgb(0, 0, 0)
     turtle = hyperbolic.PointedVector(0.0, 0.0, 0.0)
     #teichmuller.draw_hexagon(ctx, turtle, 0.5, 0.25, 0.5, color=True)
     #teichmuller.draw_hexagon(ctx, turtle,
@@ -66,10 +73,17 @@ def draw_frame(ctx, size, param):
     #polygons.draw_polygons(ctx, tessellation)
     polygons.draw_segments(ctx, segments)
 
+    #hyperbolic.Point(0.0, 0.0).segment_to(hyperbolic.Point(0.5, 0.0)).draw(ctx)
+    #hyperbolic.Point(0.0, 0.0).draw(ctx)
+    #hyperbolic.Point(0.5, 0.0).draw(ctx)
+
     # Draw hyperbolic circle
-    ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
-    ctx.cairo.set_source_rgb(0, 0, 0)
-    ctx.cairo.stroke()
+    #ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)
+    #ctx.cairo.set_source_rgb(0, 0, 0)
+    #ctx.cairo.stroke()
+    p1 = tuple(map(int, ctx.cairo.user_to_device(-1.0, 1.0)))
+    p2 = tuple(map(int, ctx.cairo.user_to_device(1.0, -1.0)))
+    ctx.image_draw.arc([p1[0], p1[1], p2[0], p2[1]], 0, 360, fill=(255, 0, 0))
 
 def draw_overlay(overlay, ctx, timestamp, duration):
 
@@ -127,7 +141,15 @@ def init_cairo(size):
     cairo.translate(size[0]/2, -size[1]/2)
     cairo.scale(versor_len, versor_len)
 
-    return cairo
+    return pygame_surf, cairo
+
+def init_pil(size):
+
+    #pygame_surf = pygame.display.set_mode(size, pygame.RESIZABLE, 32)
+    pil_image = Image.new("RGBA", size)
+    pil_image_draw = ImageDraw.Draw(pil_image)
+
+    return pil_image, pil_image_draw
 
 def get_mouse_coords(ctx, event):
     user_coords = ctx.cairo.device_to_user(*event.pos)
@@ -149,8 +171,10 @@ def pygame_animation():
     pygame.display.set_caption('Hyperbolic!')
 
     size = (640, 480)
-    cairo = init_cairo(size)
+    pygame_surf, cairo = init_cairo(size)
+    image, image_draw = init_pil(size)
     ctx = hyperbolic.HyperbolicContext(cairo, hyperbolic.Isometry(), poincare=True)
+    ctx.image, ctx.image_draw = image, image_draw
 
     # Movement tracking
     base_point = None
@@ -178,7 +202,9 @@ def pygame_animation():
             elif event.type == VIDEORESIZE:
                 size = event.size
                 cairo = init_cairo(size)
+                image_draw = init_pil(size)
                 ctx.cairo = cairo
+                ctx.image_draw = image_draw
 
             elif event.type == MOUSEBUTTONDOWN:
                 x, y = get_mouse_coords(ctx, event)
@@ -217,6 +243,9 @@ def pygame_animation():
 
                     if rot is not None:
                         ctx.isom = rot.compose(ctx.isom)
+
+        new_surface = pygame.image.frombuffer(ctx.image.tostring('raw', 'RGBA', 0, 1), size, 'RGBA')
+        pygame_surf.blit(new_surface, (0, 0))
 
         # Finish
         pygame.display.flip()
