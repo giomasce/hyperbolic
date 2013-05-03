@@ -22,6 +22,7 @@ import polygons
 from utils import get_actual_dimension
 
 tessellation = polygons.build_regular_tessellation(5, 5, hyperbolic.PointedVector(0.0, 0.0, 0.0))
+segments = polygons.build_segment_list(tessellation)
 
 def draw_frame(ctx, size, param):
 
@@ -62,7 +63,8 @@ def draw_frame(ctx, size, param):
     #                         color=True)
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_center(5, 2.0, turtle))
     #polygons.draw_polygon(ctx, polygons.build_polygon_with_angle(7, 2.0 * math.pi / 3, turtle))
-    polygons.draw_polygons(ctx, tessellation)
+    #polygons.draw_polygons(ctx, tessellation)
+    polygons.draw_segments(ctx, segments)
 
     # Draw hyperbolic circle
     ctx.cairo.arc(0, 0, 1, 0, 2 * math.pi)

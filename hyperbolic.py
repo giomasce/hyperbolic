@@ -5,6 +5,8 @@ import math
 
 from euclidean import EuPoint, EuLine, EuCircle, crossratio
 from utils import get_actual_dimension
+from point_cache import GridApproximationSegmentCache
+import chyperbolic
 
 def my_trunc(x):
     if x >= 0:
@@ -14,6 +16,7 @@ def my_trunc(x):
 
 POINT_RADIUS = 3.5
 CIRCLE_LINE_THRESHOLD = 0.000001
+SEGMENT_CACHE_THRESHOLD = 0.0001
 
 class HyperbolicContext:
 

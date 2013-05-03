@@ -3,6 +3,8 @@
 
 import math
 
+import chyperbolic
+
 def det2(a, b, c, d):
     return a*d - b*c
 
@@ -27,6 +29,9 @@ class EuPoint:
         self.x = x
         self.y = y
 
+    def __repr__(self):
+        return "EuPoint(x=%f, y=%f)" % (self.x, self.y)
+
     def get_coords(self):
         return (self.x, self.y)
 
@@ -49,12 +54,14 @@ class EuPoint:
         return math.sqrt(self.sqdistance(point))
 
     def sqnorm(self):
-        return self.x**2 + self.y**2
+        return self.x*self.x + self.y*self.y
 
     def norm(self):
         return math.sqrt(self.sqnorm())
 
-    def line_to(self, point):
+    def line_to(self, point, optimize=True):
+        if optimize:
+            return EuLine(*chyperbolic.c_eupoint_line_to(self.x, self.y, point.x, point.y))
         deltay = point.y - self.y
         deltax = point.x - self.x
         if abs(deltax) > abs(deltay):
@@ -80,7 +87,12 @@ class EuLine:
         self.b = b
         self.c = c
 
-    def intersection_line(self, line):
+    def __repr__(self):
+        return "EuPoint(a=%f, b=%f, c=%f)" % (self.a, self.b, self.c)
+
+    def intersection_line(self, line, optimize=True):
+        if optimize:
+            return EuPoint(*chyperbolic.c_euline_intersection_line(self.a, self.b, self.c, line.a, line.b, line.c))
         denom = - det2(self.a, self.b, line.a, line.b)
         x = det2(self.c, self.b, line.c, line.b) / denom
         y = det2(self.a, self.c, line.a, line.c) / denom
@@ -97,7 +109,9 @@ class EuCircle:
         self.yy = yy
         self.r = r
 
-    def intersection_line(self, line):
+    def intersection_line(self, line, optimized=True):
+        if optimized:
+            return map(lambda (x, y): EuPoint(x, y), chyperbolic.c_eucircle_intersection_line(self.xx, self.yy, self.r, line.a, line.b, line.c))
         a, b, c = line.a, line.b, line.c
         xx, yy, r = self.xx, self.yy, self.r
 

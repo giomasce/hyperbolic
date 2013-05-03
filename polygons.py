@@ -6,7 +6,7 @@ import math
 from scipy import optimize
 
 from hyperbolic import Point, PointedVector, Line
-from point_cache import GridApproximationPointCache
+from point_cache import GridApproximationPointCache, GridApproximationSegmentCache
 
 MIN_SEARCH = 0.00000001
 MAX_SEARCH = 10.0
@@ -98,7 +98,7 @@ def draw_polygons(ctx, polygons):
     for points in polygons:
         draw_polygon(ctx, points)
 
-CACHE_EPSILON = 0.0000001
+CACHE_EPSILON = 0.000001
 FAR_FIELD_EPSILON = 0.0001
 
 def build_regular_tessellation(side_num, valence_num, pv, point_cache=None, polygons=None):
@@ -123,3 +123,19 @@ def build_regular_tessellation(side_num, valence_num, pv, point_cache=None, poly
             build_regular_tessellation(side_num, valence_num, pv, point_cache=point_cache, polygons=polygons)
 
     return polygons
+
+def build_segment_list(polygons):
+    segments = []
+    cache = GridApproximationSegmentCache(CACHE_EPSILON)
+    for points in polygons:
+        for i in xrange(len(points)):
+            p1 = points[i].to_point()
+            p2 = points[(i+1) % len(points)].to_point()
+            if not cache.query(p1, p2):
+                cache.store(p1, p2)
+                segments.append((p1, p2))
+    return segments
+
+def draw_segments(ctx, segments):
+    for p1, p2 in segments:
+        p1.segment_to(p2).draw(ctx)
